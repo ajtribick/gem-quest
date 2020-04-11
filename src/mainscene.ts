@@ -11,13 +11,15 @@ const LayerNames = {
     spiders: 'Spiders'
 };
 
-const LocalAssets = {
-    tiles: 'tiles'
+const ObjTypes = {
+    gem: 'gem',
+    key: 'key',
+    door: 'door',
+    player: 'player'
 };
 
-const SpiderData = {
-    vector: 'vector',
-    path: 'path'
+const LocalAssets = {
+    tiles: 'tiles'
 };
 
 const Animations = {
@@ -52,7 +54,6 @@ export class MainScene extends Phaser.Scene {
         this.createObjects();
         this.createSpiders();
 
-        this.physics.add.collider(this.player.sprite, this.platformLayer);
         this.physics.add.collider(this.player.sprite, this.doorsGroup);
         this.physics.add.overlap(this.player.sprite, this.gemsGroup, this.collectGem, undefined, this);
         this.physics.add.overlap(this.player.sprite, this.keysGroup, this.collectKey, undefined, this);
@@ -112,23 +113,23 @@ export class MainScene extends Phaser.Scene {
         var objsLayer = this.map.getObjectLayer(LayerNames.objects);
         objsLayer.objects.forEach((obj) => {
             switch (obj.type) {
-                case 'gem':
+                case ObjTypes.gem:
                     var gem = (this.gemsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, 'gem1') as Phaser.Physics.Arcade.Sprite).setOrigin(0, 1);
                     gem.body.setSize(7, 7, false);
                     gem.anims.play(Animations.gem);
                     this.gemsGroup.add(gem);
                     break;
-                case 'key':
+                case ObjTypes.key:
                     var key = (this.keysGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite).setOrigin(0, 1);
                     key.setData("unlocks", "door" + obj.name.slice(-1));
                     break;
-                case 'door':
+                case ObjTypes.door:
                     var door = (this.doorsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite).setOrigin(0, 0);
                     door.name = obj.name;
                     break;
-                case 'player':
+                case ObjTypes.player:
                     if (!this.player) {
-                        this.player = new Player(this, obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles);
+                        this.player = new Player(this, obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, this.platformLayer);
                     } else {
                         console.log("Attempted to add player twice");
                     }
@@ -147,7 +148,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     update() {
-        this.player.update(this.physics.overlap(this.player.sprite, this.laddersGroup));
+        this.player.update(this.physics.overlap(this.player.sprite, this.laddersGroup, undefined, undefined, this));
 
         if (--this.waterFrames === 0) {
             this.deadlyLayer.forEachTile(tile => {
@@ -160,7 +161,7 @@ export class MainScene extends Phaser.Scene {
             this.waterFrames = 10;
         }
 
-        this.spiders.forEach((spider) => { spider.update(); });
+        this.spiders.forEach(spider => { spider.update(); });
     }
 
     private collectGem(_player: Phaser.GameObjects.GameObject, gem: Phaser.GameObjects.GameObject) {
@@ -185,6 +186,5 @@ export class MainScene extends Phaser.Scene {
 
     private collideDeathTile(_player: Phaser.GameObjects.GameObject, _tile: Phaser.Tilemaps.Tile) {
         this.player.die();
-        return false;
     }
 };
