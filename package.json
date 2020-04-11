@@ -1,0 +1,22 @@
+{
+  "name": "example_game",
+  "version": "1.0.0",
+  "description": "Tutorial game",
+  "main": "src/index.html",
+  "scripts": {
+    "build": "parcel build src/index.html --public-url ./",
+    "start": "parcel serve src/index.html",
+    "clean": "rm -v dist/*",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Andrew Tribick",
+  "license": "ISC",
+  "dependencies": {
+    "assets": "^3.0.1",
+    "phaser": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^13.11.0",
+    "typescript": "^3.8.3"
+  }
+}
