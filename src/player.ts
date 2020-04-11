@@ -42,7 +42,7 @@ export class Player {
         scene.anims.create({
             key: Animations.playerDead,
             frames: scene.anims.generateFrameNames(key, { prefix: 'playerDead', start: 1, end: 4 }),
-            frameRate: AnimationRate,
+            frameRate: AnimationRate / 2,
             repeat: 0
         });
 
@@ -51,7 +51,7 @@ export class Player {
         this.sprite = scene.physics.add.sprite(x!, y!, key, 'playerR1').setOrigin(0, 0);
     }
 
-    update() {
+    update(onLadder: boolean) {
         if (!this.dead) {
             var playerBody = this.sprite.body as Phaser.Physics.Arcade.Body;
             var vx = 0;

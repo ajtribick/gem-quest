@@ -7,7 +7,6 @@ const LayerNames = {
     platforms: 'Platforms',
     ladders: 'Ladders',
     deadly: 'Deadly',
-    water: 'Water',
     objects: 'Objects',
     spiders: 'Spiders'
 };
@@ -32,13 +31,15 @@ const MapY = 8;
 export class MainScene extends Phaser.Scene {
     private map!: Phaser.Tilemaps.Tilemap;
     private platformLayer!: Phaser.Tilemaps.StaticTilemapLayer;
-    private waterLayer!: Phaser.Tilemaps.DynamicTilemapLayer;
+    private deadlyLayer!: Phaser.Tilemaps.DynamicTilemapLayer;
     private waterFrames: integer = 10;
 
     private gemsGroup!: Phaser.Physics.Arcade.Group;
     private keysGroup!: Phaser.Physics.Arcade.Group;
     private doorsGroup!: Phaser.Physics.Arcade.Group;
     private spidersGroup!: Phaser.Physics.Arcade.Group;
+    private spikesGroup!: Phaser.Physics.Arcade.Group;
+    private laddersGroup!: Phaser.Physics.Arcade.StaticGroup;
     private spiders: Spider[] = [];
     private player!: Player;
 
@@ -55,7 +56,10 @@ export class MainScene extends Phaser.Scene {
         this.physics.add.collider(this.player.sprite, this.doorsGroup);
         this.physics.add.overlap(this.player.sprite, this.gemsGroup, this.collectGem, undefined, this);
         this.physics.add.overlap(this.player.sprite, this.keysGroup, this.collectKey, undefined, this);
-        this.physics.add.overlap(this.player.sprite, this.spidersGroup, this.collideSpider, undefined, this);
+        this.physics.add.overlap(this.player.sprite, this.spidersGroup, this.collideDeath, undefined, this);
+        this.physics.add.overlap(this.player.sprite, this.spikesGroup, this.collideDeath, undefined, this);
+        this.physics.add.overlap(this.player.sprite, this.deadlyLayer);
+        this.deadlyLayer.setTileIndexCallback([17, 18], this.collideDeathTile, this);
     }
 
     private createMap() {
@@ -64,9 +68,33 @@ export class MainScene extends Phaser.Scene {
         this.platformLayer = this.map.createStaticLayer(LayerNames.platforms, platformTiles, MapX, MapY);
         this.platformLayer.setCollision([1,2,3,4,9,10]);
 
-        this.map.createStaticLayer(LayerNames.ladders, platformTiles, MapX, MapY);
-        this.map.createStaticLayer(LayerNames.deadly, platformTiles, MapX, MapY);
-        this.waterLayer = this.map.createDynamicLayer(LayerNames.water, platformTiles, MapX, MapY);
+        var ladderLayer = this.map.createStaticLayer(LayerNames.ladders, platformTiles, MapX, MapY);
+        this.laddersGroup = this.physics.add.staticGroup();
+        ladderLayer.forEachTile((tile : Phaser.Tilemaps.Tile) => {
+            if (tile.index === 12 && (tile.y === 0 || ladderLayer.getTileAt(tile.x, tile.y - 1, true).index !== 12)) {
+                var bottomTile = tile;
+                while (bottomTile.y < this.map.height - 1) {
+                    var nextTile = ladderLayer.getTileAt(bottomTile.x, bottomTile.y + 1, true);
+                    if (nextTile.index != 12) { break; }
+                    bottomTile = nextTile;
+                }
+
+                var ladder = this.laddersGroup.create(tile.getLeft() + tile.width / 2, (tile.getTop() + bottomTile.getBottom()) / 2, undefined) as Phaser.Physics.Arcade.Sprite;
+                ladder.setVisible(false);
+                ladder.body.setSize(2, bottomTile.getBottom() - tile.getTop());
+            }
+        });
+
+        this.deadlyLayer = this.map.createDynamicLayer(LayerNames.deadly, platformTiles, MapX, MapY);
+        this.spikesGroup = this.physics.add.group({ immovable: true, allowGravity: false });
+        this.deadlyLayer.forEachTile(tile => {
+            if (tile.index === 20) {
+                var spikes = this.spikesGroup.create(tile.pixelX + MapX, tile.pixelY + MapY + 4, AssetNames.tiles, "spikes") as Phaser.Physics.Arcade.Sprite;
+                spikes.setOrigin(0, 0);
+                spikes.body.setSize(6, 4, true);
+                tile.index = 0;
+            }
+        });
     }
 
     private createObjects() {
@@ -113,16 +141,16 @@ export class MainScene extends Phaser.Scene {
         Spider.createAnimation(this, 'tiles');
         this.spidersGroup = this.physics.add.group({ allowGravity: false });
         var spiderLayer = this.map.getObjectLayer(LayerNames.spiders);
-        spiderLayer.objects.forEach((obj) => {
+        spiderLayer.objects.forEach(obj => {
             this.spiders.push(new Spider(this, obj, this.spidersGroup, MapX, MapY, LocalAssets.tiles));
         });
     }
 
     update() {
-        this.player.update();
+        this.player.update(this.physics.overlap(this.player.sprite, this.laddersGroup));
 
         if (--this.waterFrames === 0) {
-            this.waterLayer.forEachTile(tile => {
+            this.deadlyLayer.forEachTile(tile => {
                 if (tile.index === 17) {
                     tile.index = 18;
                 } else if (tile.index === 18) {
@@ -151,7 +179,12 @@ export class MainScene extends Phaser.Scene {
         }
     }
 
-    private collideSpider(_player: Phaser.GameObjects.GameObject, _spider: Phaser.GameObjects.GameObject) {
+    private collideDeath(_player: Phaser.GameObjects.GameObject, _enemy: Phaser.GameObjects.GameObject) {
         this.player.die();
+    }
+
+    private collideDeathTile(_player: Phaser.GameObjects.GameObject, _tile: Phaser.Tilemaps.Tile) {
+        this.player.die();
+        return false;
     }
 };

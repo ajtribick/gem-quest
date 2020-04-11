@@ -181,6 +181,13 @@
             "trimmed": false,
             "spriteSourceSize": {"x": 0, "y": 0, "w": 8, "h": 16},
             "sourceSize": {"w": 8, "h": 16 }
+        },
+        "spikes": {
+            "frame": {"x": 24, "y": 20, "w": 8, "h": 4},
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {"x": 0, "y": 0, "w": 8, "h": 4},
+            "sourceSize": {"w": 8, "h": 4 }
         }
     }
 }
