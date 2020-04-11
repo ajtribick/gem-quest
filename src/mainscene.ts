@@ -28,6 +28,9 @@ const Animations = {
     spider: 'spider'
 };
 
+const MapX = 0;
+const MapY = 8;
+
 export class MainScene extends Phaser.Scene {
     private map!: Phaser.Tilemaps.Tilemap;
     private waterLayer!: Phaser.Tilemaps.DynamicTilemapLayer;
@@ -51,10 +54,10 @@ export class MainScene extends Phaser.Scene {
     private createMap() {
         this.map = this.add.tilemap(AssetNames.level1);
         var platformTiles = this.map.addTilesetImage(LocalAssets.tiles, AssetNames.tiles);
-        this.map.createStaticLayer(LayerNames.platforms, platformTiles, 0, 8);
-        this.map.createStaticLayer(LayerNames.ladders, platformTiles, 0, 8);
-        this.map.createStaticLayer(LayerNames.deadly, platformTiles, 0, 8);
-        this.waterLayer = this.map.createDynamicLayer(LayerNames.water, platformTiles, 0, 8);
+        this.map.createStaticLayer(LayerNames.platforms, platformTiles, MapX, MapY);
+        this.map.createStaticLayer(LayerNames.ladders, platformTiles, MapX, MapY);
+        this.map.createStaticLayer(LayerNames.deadly, platformTiles, MapX, MapY);
+        this.waterLayer = this.map.createDynamicLayer(LayerNames.water, platformTiles, MapX, MapY);
     }
 
     private createObjects() {
@@ -99,19 +102,19 @@ export class MainScene extends Phaser.Scene {
         objsLayer.objects.forEach((obj) => {
             switch (obj.type) {
                 case 'gem':
-                    var gem = (this.gemsGroup.create(obj.x!, obj.y! + 8, LocalAssets.tiles, 'gem1') as Phaser.GameObjects.Sprite).setOrigin(0, 1);
+                    var gem = (this.gemsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, 'gem1') as Phaser.GameObjects.Sprite).setOrigin(0, 1);
                     gem.anims.play(Animations.gem);
                     this.gemsGroup.add(gem);
                     break;
                 case 'key':
-                    this.add.sprite(obj.x!, obj.y! + 8, LocalAssets.tiles, obj.name).setOrigin(0, 1);
+                    this.add.sprite(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name).setOrigin(0, 1);
                     break;
                 case 'door':
-                    this.add.sprite(obj.x!, obj.y! + 8, LocalAssets.tiles, obj.name).setOrigin(0, 0);
+                    this.add.sprite(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name).setOrigin(0, 0);
                     break;
                 case 'player':
                     if (!this.player) {
-                        this.player = this.add.sprite(obj.x!, obj.y! + 8, LocalAssets.tiles, 'playerR1').setOrigin(0, 0);
+                        this.player = this.add.sprite(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, 'playerR1').setOrigin(0, 0);
                     } else {
                         console.log("Attempted to add player twice");
                     }
@@ -131,24 +134,24 @@ export class MainScene extends Phaser.Scene {
         this.spidersGroup = this.add.group();
         var spiderLayer = this.map.getObjectLayer(LayerNames.spiders);
         spiderLayer.objects.forEach((obj) => {
-            var spider = this.spidersGroup.create(obj.x!, obj.y! + 8, LocalAssets.tiles, 'spider1').setOrigin(0.5, 0.5);
+            var spider = this.spidersGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, 'spider1').setOrigin(0.5, 0.5);
 
             var path = new Phaser.Curves.Path();
             var yoyo = false;
             if (obj.polygon) {
                 obj.polygon.forEach((coords, index) => {
                     if (index === 0) {
-                        path.moveTo(coords.x! + obj.x!, coords.y! + obj.y! + 8);
+                        path.moveTo(coords.x! + obj.x! + MapX, coords.y! + obj.y! + MapY);
                     } else {
-                        path.lineTo(coords.x! + obj.x!, coords.y! + obj.y! + 8);
+                        path.lineTo(coords.x! + obj.x! + MapX, coords.y! + obj.y! + MapY);
                     }
                 });
             } else if (obj.polyline) {
                 obj.polyline.forEach((coords, index) => {
                     if (index === 0) {
-                        path.moveTo(coords.x! + obj.x!, coords.y! + obj.y! + 8);
+                        path.moveTo(coords.x! + obj.x! + MapX, coords.y! + obj.y! + MapY);
                     } else {
-                        path.lineTo(coords.x! + obj.x!, coords.y! + obj.y! + 8);
+                        path.lineTo(coords.x! + obj.x! + MapX, coords.y! + obj.y! + MapY);
                     }
                 });
                 yoyo = true;
