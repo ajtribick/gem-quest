@@ -131,26 +131,44 @@ export class MainScene extends Phaser.Scene {
         this.spidersGroup = this.add.group();
         var spiderLayer = this.map.getObjectLayer(LayerNames.spiders);
         spiderLayer.objects.forEach((obj) => {
-            var path = new Phaser.Curves.Path();
-            obj.polygon?.forEach((coords, index) => {
-                if (index === 0) {
-                    path.moveTo(coords.x! + obj.x!, coords.y! + obj.y! + 8);
-                } else {
-                    path.lineTo(coords.x! + obj.x!, coords.y! + obj.y! + 8);
-                }
-            });
-
             var spider = this.spidersGroup.create(obj.x!, obj.y! + 8, LocalAssets.tiles, 'spider1').setOrigin(0.5, 0.5);
+
+            var path = new Phaser.Curves.Path();
+            var yoyo = false;
+            if (obj.polygon) {
+                obj.polygon.forEach((coords, index) => {
+                    if (index === 0) {
+                        path.moveTo(coords.x! + obj.x!, coords.y! + obj.y! + 8);
+                    } else {
+                        path.lineTo(coords.x! + obj.x!, coords.y! + obj.y! + 8);
+                    }
+                });
+            } else if (obj.polyline) {
+                obj.polyline.forEach((coords, index) => {
+                    if (index === 0) {
+                        path.moveTo(coords.x! + obj.x!, coords.y! + obj.y! + 8);
+                    } else {
+                        path.lineTo(coords.x! + obj.x!, coords.y! + obj.y! + 8);
+                    }
+                });
+                yoyo = true;
+            } else {
+                console.log("Spider path is missing");
+                return;
+            }
+
             spider.setData(SpiderData.vector, new Phaser.Math.Vector2());
             spider.setData(SpiderData.path, path);
             spider.anims.play(Animations.spider);
+
             this.tweens.add({
                 targets: spider,
                 z: 1,
                 ease: 'Linear',
                 duration: path.getLength() * 24,
                 repeat: -1,
-                delay: 0
+                delay: 0,
+                yoyo: yoyo
             });
         });
     }
