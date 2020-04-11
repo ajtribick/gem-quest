@@ -68,6 +68,8 @@ export class MainScene extends Phaser.Scene {
         this.physics.add.overlap(this.player.sprite, this.spikesGroup, this.collideDeath, undefined, this);
         this.physics.add.overlap(this.player.sprite, this.deadlyLayer);
         this.deadlyLayer.setTileIndexCallback([17, 18], this.collideDeathTile, this);
+
+        this.physics.world.on('worldbounds', this.onWorldBounds);
     }
 
     private createMap() {
@@ -127,12 +129,16 @@ export class MainScene extends Phaser.Scene {
                     this.gemsGroup.add(gem);
                     break;
                 case ObjTypes.key:
-                    var key = (this.keysGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite).setOrigin(0, 1);
-                    key.setData("unlocks", "door" + obj.name.slice(-1));
+                    if (this.gameData.activeDoors.includes(parseInt(obj.name.slice(-1)))) {
+                        var key = (this.keysGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite).setOrigin(0, 1);
+                        key.setData("unlocks", "door" + obj.name.slice(-1));
+                    }
                     break;
                 case ObjTypes.door:
-                    var door = (this.doorsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite).setOrigin(0, 0);
-                    door.name = obj.name;
+                    if (this.gameData.activeDoors.includes(parseInt(obj.name.slice(-1)))) {
+                        var door = (this.doorsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite).setOrigin(0, 0);
+                        door.name = obj.name;
+                    }
                     break;
             }
         });
@@ -186,5 +192,11 @@ export class MainScene extends Phaser.Scene {
 
     private collideDeathTile(_player: Phaser.GameObjects.GameObject, _tile: Phaser.Tilemaps.Tile) {
         this.player.die();
+    }
+
+    private onWorldBounds(body: Phaser.Physics.Arcade.Body, up: boolean, down: boolean, left: boolean, right: boolean) {
+        if (body.gameObject.name === 'player') {
+            console.log([up,down,left,right].join(", "));
+        }
     }
 };

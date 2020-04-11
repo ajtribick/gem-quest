@@ -65,7 +65,8 @@ export class Player {
 
         this.cursors = scene.input.keyboard.createCursorKeys();
 
-        this.sprite = scene.physics.add.sprite(x!, y!, key, 'playerR1').setOrigin(0, 0);
+        this.sprite = scene.physics.add.sprite(x!, y!, key, 'playerR1').setName('player').setOrigin(0, 0).setCollideWorldBounds(true);
+        (this.sprite.body as Phaser.Physics.Arcade.Body).onWorldBounds = true;
         platforms.setTileIndexCallback([0, 1, 2, 3], () => { this.hasFriction = true; }, this);
         this.platformsCollider = scene.physics.add.collider(this.sprite, platforms);
     }

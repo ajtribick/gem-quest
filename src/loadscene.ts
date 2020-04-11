@@ -13,7 +13,7 @@ export class LoadScene extends Phaser.Scene {
     }
 
     create() {
-        let gameStart: GameData = { playerX: 16, playerY: 160 };
+        let gameStart: GameData = { playerX: 16, playerY: 160, activeDoors: [1,2,3,4] };
         this.scene.start(SceneNames.main, gameStart);
     }
 };
