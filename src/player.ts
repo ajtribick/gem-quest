@@ -179,9 +179,16 @@ export class Player {
         this.platformsCollider.active = true;
     }
 
-    die() {
+    die(diedCallback: Function, context: any) {
         if (!this.dead) {
             this.dead = true;
+            this.sprite.anims.stop();
+            this.sprite.on('animationcomplete', () => {
+                this.scene.time.delayedCall(500, () => {
+                    diedCallback.bind(context)();
+                })
+            }, this);
+
             this.sprite.anims.play(Animations.playerDead);
             this.sprite.setDragX(40);
             this.sprite.setBounce(0.3);

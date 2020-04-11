@@ -68,11 +68,11 @@ export class MainScene extends Phaser.Scene {
         this.physics.add.overlap(this.player.sprite, this.deadlyLayer);
         this.deadlyLayer.setTileIndexCallback([17, 18], this.collideDeathTile, this);
 
-        this.physics.world.on('worldbounds', this.onWorldBounds);
+        this.physics.world.on('worldbounds', this.onWorldBounds, this);
     }
 
     private createMap() {
-        this.map = this.add.tilemap(AssetNames.level1);
+        this.map = this.add.tilemap(AssetNames.level + this.gameData.levelX.toString() + this.gameData.levelY.toString());
         var platformTiles = this.map.addTilesetImage(LocalAssets.tiles, AssetNames.tiles);
         this.platformLayer = this.map.createStaticLayer(LayerNames.platforms, platformTiles, MapX, MapY);
         this.platformLayer.setCollision([1,2,3,4,9,10]);
@@ -131,13 +131,13 @@ export class MainScene extends Phaser.Scene {
                     this.gemsGroup.add(gem);
                     break;
                 case ObjTypes.key:
-                    if (this.gameData.activeDoors.includes(parseInt(obj.name.slice(-1)))) {
+                    if (!this.gameData.openDoors.has(parseInt(obj.name.slice(-1)))) {
                         var key = (this.keysGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite).setOrigin(0, 1);
                         key.setData("unlocks", "door" + obj.name.slice(-1));
                     }
                     break;
                 case ObjTypes.door:
-                    if (this.gameData.activeDoors.includes(parseInt(obj.name.slice(-1)))) {
+                    if (!this.gameData.openDoors.has(parseInt(obj.name.slice(-1)))) {
                         var door = (this.doorsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite).setOrigin(0, 0);
                         door.name = obj.name;
                     }
@@ -179,20 +179,44 @@ export class MainScene extends Phaser.Scene {
             var doorId = sprite.getData("unlocks") as string;
             var door = this.children.getByName(doorId) as Phaser.Physics.Arcade.Sprite;
             door.disableBody(true, true);
+            this.gameData.openDoors.add(parseInt(doorId.slice(-1)));
         }
     }
 
     private collideDeath(_player: Phaser.GameObjects.GameObject, _enemy: Phaser.GameObjects.GameObject) {
-        this.player.die();
+        this.player.die(this.onDied, this);
     }
 
     private collideDeathTile(_player: Phaser.GameObjects.GameObject, _tile: Phaser.Tilemaps.Tile) {
-        this.player.die();
+        this.player.die(this.onDied, this);
+    }
+
+    private onDied() {
+        this.scene.restart(this.gameData);
     }
 
     private onWorldBounds(body: Phaser.Physics.Arcade.Body, up: boolean, down: boolean, left: boolean, right: boolean) {
         if (body.gameObject.name === 'player') {
-            console.log([up,down,left,right].join(", "));
+            if (up) {
+                --this.gameData.levelY;
+                this.gameData.playerX = this.player.sprite.x;
+                this.gameData.playerY = this.map.heightInPixels - this.player.sprite.width + MapY;
+            } else if (down) {
+                ++this.gameData.levelY;
+                this.gameData.playerX = this.player.sprite.x;
+                this.gameData.playerY = MapY;
+            } else if (left) {
+                --this.gameData.levelX;
+                this.gameData.playerX = this.map.widthInPixels - this.player.sprite.width + MapX;
+                this.gameData.playerY = this.player.sprite.y;
+            } else if (right) {
+                ++this.gameData.levelX;
+                this.gameData.playerX = MapX;
+                this.gameData.playerY = this.player.sprite.y;
+            }
+
+            console.log("Restart");
+            this.scene.restart(this.gameData);
         }
     }
 };

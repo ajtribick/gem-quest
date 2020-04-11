@@ -3,6 +3,11 @@ export const SceneNames = {
 };
 
 export const AssetNames = {
-    level1: 'level1',
+    level: 'level',
     tiles: 'tiles'
 };
+
+export const Levels = [
+    ['level00', require('./assets/map00.json')],
+    ['level10', require('./assets/map10.json')]
+];

@@ -1,5 +1,7 @@
 export interface GameData {
     playerX: number;
     playerY: number;
-    activeDoors: number[];
+    levelX: number;
+    levelY: number;
+    openDoors: Set<number>;
 }
