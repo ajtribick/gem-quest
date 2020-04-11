@@ -1,5 +1,7 @@
 import 'phaser';
 import {SceneNames, AssetNames} from './consts';
+import {Player} from './player';
+import {Spider} from './spider';
 
 const LayerNames = {
     platforms: 'Platforms',
@@ -20,10 +22,6 @@ const SpiderData = {
 };
 
 const Animations = {
-    playerL: 'playerL',
-    playerR: 'playerR',
-    playerUD: 'playerUD',
-    playerDead: 'playerDead',
     gem: 'gem',
     spider: 'spider'
 };
@@ -33,13 +31,13 @@ const MapY = 8;
 
 export class MainScene extends Phaser.Scene {
     private map!: Phaser.Tilemaps.Tilemap;
+    private platformLayer!: Phaser.Tilemaps.StaticTilemapLayer;
     private waterLayer!: Phaser.Tilemaps.DynamicTilemapLayer;
     private waterFrames: integer = 10;
 
     private gemsGroup!: Phaser.GameObjects.Group;
-    private spidersGroup!: Phaser.GameObjects.Group;
-
-    private player!: Phaser.GameObjects.Sprite;
+    private spiders: Spider[] = [];
+    private player!: Player;
 
     constructor() {
         super(SceneNames.main);
@@ -49,12 +47,16 @@ export class MainScene extends Phaser.Scene {
         this.createMap();
         this.createObjects();
         this.createSpiders();
+
+        this.physics.add.collider(this.player.sprite, this.platformLayer);
     }
 
     private createMap() {
         this.map = this.add.tilemap(AssetNames.level1);
         var platformTiles = this.map.addTilesetImage(LocalAssets.tiles, AssetNames.tiles);
-        this.map.createStaticLayer(LayerNames.platforms, platformTiles, MapX, MapY);
+        this.platformLayer = this.map.createStaticLayer(LayerNames.platforms, platformTiles, MapX, MapY);
+        this.platformLayer.setCollision([1,2,3,4,9,10]);
+
         this.map.createStaticLayer(LayerNames.ladders, platformTiles, MapX, MapY);
         this.map.createStaticLayer(LayerNames.deadly, platformTiles, MapX, MapY);
         this.waterLayer = this.map.createDynamicLayer(LayerNames.water, platformTiles, MapX, MapY);
@@ -70,33 +72,6 @@ export class MainScene extends Phaser.Scene {
             repeat: -1
         });
 
-        this.anims.create({
-            key: Animations.playerR,
-            frames: this.anims.generateFrameNames(LocalAssets.tiles, { prefix: 'playerR', frames: [1, 2, 3, 2] }),
-            frameRate: 5,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: Animations.playerL,
-            frames: this.anims.generateFrameNames(LocalAssets.tiles, { prefix: 'playerL', frames: [1, 2, 3, 2] }),
-            frameRate: 5,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: Animations.playerUD,
-            frames: this.anims.generateFrameNames(LocalAssets.tiles, { prefix: 'playerUD', start: 1, end: 2 }),
-            frameRate: 5,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: Animations.playerDead,
-            frames: this.anims.generateFrameNames(LocalAssets.tiles, { prefix: 'playerDead', start: 1, end: 4 }),
-            frameRate: 5,
-            repeat: 0
-        });
 
         var objsLayer = this.map.getObjectLayer(LayerNames.objects);
         objsLayer.objects.forEach((obj) => {
@@ -114,7 +89,7 @@ export class MainScene extends Phaser.Scene {
                     break;
                 case 'player':
                     if (!this.player) {
-                        this.player = this.add.sprite(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, 'playerR1').setOrigin(0, 0);
+                        this.player = new Player(this, obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles);
                     } else {
                         console.log("Attempted to add player twice");
                     }
@@ -124,59 +99,17 @@ export class MainScene extends Phaser.Scene {
     }
 
     private createSpiders() {
-        this.anims.create({
-            key: Animations.spider,
-            frames: this.anims.generateFrameNames(LocalAssets.tiles, { prefix: 'spider', start: 1, end: 2 }),
-            frameRate: 5,
-            repeat: -1
-        });
-
-        this.spidersGroup = this.add.group();
+        Spider.createAnimation(this, 'tiles');
+        var spidersGroup = this.physics.add.group({ allowGravity: false });
         var spiderLayer = this.map.getObjectLayer(LayerNames.spiders);
         spiderLayer.objects.forEach((obj) => {
-            var spider = this.spidersGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, 'spider1').setOrigin(0.5, 0.5);
-
-            var path = new Phaser.Curves.Path();
-            var yoyo = false;
-            if (obj.polygon) {
-                obj.polygon.forEach((coords, index) => {
-                    if (index === 0) {
-                        path.moveTo(coords.x! + obj.x! + MapX, coords.y! + obj.y! + MapY);
-                    } else {
-                        path.lineTo(coords.x! + obj.x! + MapX, coords.y! + obj.y! + MapY);
-                    }
-                });
-            } else if (obj.polyline) {
-                obj.polyline.forEach((coords, index) => {
-                    if (index === 0) {
-                        path.moveTo(coords.x! + obj.x! + MapX, coords.y! + obj.y! + MapY);
-                    } else {
-                        path.lineTo(coords.x! + obj.x! + MapX, coords.y! + obj.y! + MapY);
-                    }
-                });
-                yoyo = true;
-            } else {
-                console.log("Spider path is missing");
-                return;
-            }
-
-            spider.setData(SpiderData.vector, new Phaser.Math.Vector2());
-            spider.setData(SpiderData.path, path);
-            spider.anims.play(Animations.spider);
-
-            this.tweens.add({
-                targets: spider,
-                z: 1,
-                ease: 'Linear',
-                duration: path.getLength() * 24,
-                repeat: -1,
-                delay: 0,
-                yoyo: yoyo
-            });
+            this.spiders.push(new Spider(this, obj, spidersGroup, MapX, MapY, LocalAssets.tiles));
         });
     }
 
     update() {
+        this.player.update();
+
         if (--this.waterFrames === 0) {
             this.waterLayer.forEachTile(tile => {
                 if (tile.index === 17) {
@@ -188,13 +121,6 @@ export class MainScene extends Phaser.Scene {
             this.waterFrames = 10;
         }
 
-        (this.spidersGroup.getChildren() as Phaser.GameObjects.Sprite[]).forEach((spider) => {
-            var t = spider.z;
-            var vec = spider.getData(SpiderData.vector) as Phaser.Math.Vector2;
-            var path = spider.getData(SpiderData.path) as Phaser.Curves.Path;
-
-            path.getPoint(t, vec);
-            spider.setPosition(vec.x, vec.y);
-        });
+        this.spiders.forEach((spider) => { spider.update(); });
     }
 };
