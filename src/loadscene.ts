@@ -1,5 +1,6 @@
 import 'phaser';
 import {SceneNames, AssetNames} from './consts';
+import {GameData} from './gamedata';
 
 export class LoadScene extends Phaser.Scene {
     constructor() {
@@ -12,6 +13,7 @@ export class LoadScene extends Phaser.Scene {
     }
 
     create() {
-        this.scene.start(SceneNames.main);
+        let gameStart: GameData = { playerX: 16, playerY: 160 };
+        this.scene.start(SceneNames.main, gameStart);
     }
 };

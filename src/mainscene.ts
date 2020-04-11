@@ -1,5 +1,6 @@
 import 'phaser';
 import {SceneNames, AssetNames} from './consts';
+import {GameData} from './gamedata';
 import {Player} from './player';
 import {Spider} from './spider';
 
@@ -15,7 +16,6 @@ const ObjTypes = {
     gem: 'gem',
     key: 'key',
     door: 'door',
-    player: 'player'
 };
 
 const LocalAssets = {
@@ -31,6 +31,7 @@ const MapX = 0;
 const MapY = 8;
 
 export class MainScene extends Phaser.Scene {
+    private gameData!: GameData;
     private map!: Phaser.Tilemaps.Tilemap;
     private platformLayer!: Phaser.Tilemaps.StaticTilemapLayer;
     private deadlyLayer!: Phaser.Tilemaps.DynamicTilemapLayer;
@@ -49,10 +50,16 @@ export class MainScene extends Phaser.Scene {
         super(SceneNames.main);
     }
 
+    init(data: any) {
+        this.gameData = data as GameData;
+    }
+
     create() {
         this.createMap();
         this.createObjects();
         this.createSpiders();
+
+        this.player = new Player(this, this.gameData.playerX, this.gameData.playerY, AssetNames.tiles, this.platformLayer, this.laddersGroup);
 
         this.physics.add.collider(this.player.sprite, this.doorsGroup);
         this.physics.add.overlap(this.player.sprite, this.gemsGroup, this.collectGem, undefined, this);
@@ -126,13 +133,6 @@ export class MainScene extends Phaser.Scene {
                 case ObjTypes.door:
                     var door = (this.doorsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite).setOrigin(0, 0);
                     door.name = obj.name;
-                    break;
-                case ObjTypes.player:
-                    if (!this.player) {
-                        this.player = new Player(this, obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, this.platformLayer, this.laddersGroup);
-                    } else {
-                        console.log("Attempted to add player twice");
-                    }
                     break;
             }
         });
