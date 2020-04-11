@@ -9,13 +9,13 @@ const LayerNames = {
     ladders: 'Ladders',
     deadly: 'Deadly',
     objects: 'Objects',
-    spiders: 'Spiders'
 };
 
 const ObjTypes = {
     gem: 'gem',
     key: 'key',
     door: 'door',
+    spider: 'spider'
 };
 
 const LocalAssets = {
@@ -57,7 +57,6 @@ export class MainScene extends Phaser.Scene {
     create() {
         this.createMap();
         this.createObjects();
-        this.createSpiders();
 
         this.player = new Player(this, this.gameData.playerX, this.gameData.playerY, AssetNames.tiles, this.platformLayer, this.laddersGroup);
 
@@ -111,6 +110,7 @@ export class MainScene extends Phaser.Scene {
         this.gemsGroup = this.physics.add.group({ immovable: true, allowGravity: false });
         this.keysGroup = this.physics.add.group({ immovable: true, allowGravity: false });
         this.doorsGroup = this.physics.add.group({ immovable: true, allowGravity: false });
+        this.spidersGroup = this.physics.add.group({ allowGravity: false });
 
         this.anims.create({
             key: Animations.gem,
@@ -118,6 +118,8 @@ export class MainScene extends Phaser.Scene {
             frameRate: 5,
             repeat: -1
         });
+
+        Spider.createAnimation(this, 'tiles');
 
         var objsLayer = this.map.getObjectLayer(LayerNames.objects);
         objsLayer.objects.forEach((obj) => {
@@ -140,16 +142,10 @@ export class MainScene extends Phaser.Scene {
                         door.name = obj.name;
                     }
                     break;
+                case ObjTypes.spider:
+                    this.spiders.push(new Spider(this, obj, this.spidersGroup, MapX, MapY, LocalAssets.tiles));
+                    break;
             }
-        });
-    }
-
-    private createSpiders() {
-        Spider.createAnimation(this, 'tiles');
-        this.spidersGroup = this.physics.add.group({ allowGravity: false });
-        var spiderLayer = this.map.getObjectLayer(LayerNames.spiders);
-        spiderLayer.objects.forEach(obj => {
-            this.spiders.push(new Spider(this, obj, this.spidersGroup, MapX, MapY, LocalAssets.tiles));
         });
     }
 

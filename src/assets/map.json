@@ -180,18 +180,7 @@
                  "width":8,
                  "x":144,
                  "y":32
-                }],
-         "opacity":1,
-         "type":"objectgroup",
-         "visible":true,
-         "x":0,
-         "y":0
-        }, 
-        {
-         "draworder":"topdown",
-         "id":9,
-         "name":"Spiders",
-         "objects":[
+                }, 
                 {
                  "height":0,
                  "id":42,
