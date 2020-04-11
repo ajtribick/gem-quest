@@ -12,7 +12,11 @@ const config: Phaser.Types.Core.GameConfig = {
         zoom: Phaser.Scale.MAX_ZOOM
     },
     physics: {
-        default: 'arcade'
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 250 },
+            tileBias: 8
+        }
     }
 };
 
