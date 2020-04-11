@@ -9,6 +9,7 @@ const Animations = {
 
 const AnimationRate = 10;
 const WalkSpeed = 40;
+const AccelerationFactor = 4;
 const JumpSpeed = 60;
 const JumpCount = 12;
 
@@ -16,14 +17,23 @@ export class Player {
     sprite: Phaser.Physics.Arcade.Sprite;
     dead = false;
 
+    private scene: Phaser.Scene;
     private platforms: Phaser.Tilemaps.StaticTilemapLayer;
+    private ladders: Phaser.Physics.Arcade.StaticGroup;
     private platformsCollider: Phaser.Physics.Arcade.Collider;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-    private onLadder = false;
+    private hasFriction = true;
+    private usingLadder = false;
+    private ladderTop = 0;
+    private ladderBottom = 0;
     private jumpCount = 0;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, key: string, platforms: Phaser.Tilemaps.StaticTilemapLayer) {
+    constructor(scene: Phaser.Scene, x: number, y: number, key: string,
+                platforms: Phaser.Tilemaps.StaticTilemapLayer,
+                ladders: Phaser.Physics.Arcade.StaticGroup) {
+        this.scene = scene;
         this.platforms = platforms;
+        this.ladders = ladders;
 
         scene.anims.create({
             key: Animations.playerR,
@@ -56,46 +66,73 @@ export class Player {
         this.cursors = scene.input.keyboard.createCursorKeys();
 
         this.sprite = scene.physics.add.sprite(x!, y!, key, 'playerR1').setOrigin(0, 0);
+        platforms.setTileIndexCallback([0, 1, 2, 3], () => { this.hasFriction = true; }, this);
         this.platformsCollider = scene.physics.add.collider(this.sprite, platforms);
     }
 
-    update(canEnterLadder: boolean) {
+    update() {
         if (this.dead) { return; }
 
         var playerBody = this.sprite.body as Phaser.Physics.Arcade.Body;
+
+        var hasFriction = this.hasFriction;
+        this.hasFriction = false;
         if (playerBody.onFloor()) {
             this.jumpCount = JumpCount;
         } else if (this.jumpCount > 0) {
             --this.jumpCount;
         }
 
-        if (!this.onLadder) {
-            var vx = 0;
-            if (this.cursors.left?.isDown) {
-                vx -= WalkSpeed;
-            }
-            if (this.cursors.right?.isDown) {
-                vx += WalkSpeed;
-            }
-            if (vx < 0) {
-                this.sprite.anims.play(Animations.playerL, true);
-            } else if (vx > 0) {
-                this.sprite.anims.play(Animations.playerR, true);
+        var leftDown = this.cursors.left?.isDown;
+        var rightDown = this.cursors.right?.isDown;
+
+        if (!this.usingLadder) {
+            var vx: number;
+            if (hasFriction) {
+                vx = 0;
+                if (leftDown) {
+                    vx -= WalkSpeed;
+                }
+                if (rightDown) {
+                    vx += WalkSpeed;
+                }
+                if (vx < 0) {
+                    this.sprite.anims.play(Animations.playerL, true);
+                } else if (vx > 0) {
+                    this.sprite.anims.play(Animations.playerR, true);
+                } else {
+                    this.sprite.anims.stop();
+                }
             } else {
-                this.sprite.anims.stop();
+                vx = playerBody.velocity.x;
+                if (leftDown && vx > -WalkSpeed) {
+                    vx -= AccelerationFactor;
+                }
+                if (rightDown && vx < WalkSpeed) {
+                    vx += AccelerationFactor;
+                }
+                this.sprite.anims.stop()
+                if (vx < 0) {
+                    this.sprite.setFrame('playerL1');
+                } else if (vx > 0) {
+                    this.sprite.setFrame('playerR1');
+                }
             }
 
             playerBody.setVelocityX(vx);
 
+            var ladder: Phaser.Physics.Arcade.Sprite | null = null;
+            this.scene.physics.overlap(this.sprite, this.ladders, (_p, l) => { ladder = l as Phaser.Physics.Arcade.Sprite; }, undefined, this);
+
             if (this.cursors.up?.isDown) {
-                if (canEnterLadder && vx === 0) {
-                    this.setOnLadder();
+                if (ladder && !(leftDown || rightDown)) {
+                    this.setOnLadder(ladder);
                 } else if (this.jumpCount > 0) {
                     playerBody.setVelocityY(-JumpSpeed);
                 }
             }
-            if (this.cursors.down?.isDown && canEnterLadder && vx === 0) {
-                this.setOnLadder();
+            if (this.cursors.down?.isDown && ladder && !(leftDown || rightDown)) {
+                this.setOnLadder(ladder);
             }
         } else {
             var vy = 0;
@@ -103,10 +140,15 @@ export class Player {
                     this.platforms.getTilesWithinShape(this.sprite.getBounds(), { isColliding: true, isNotEmpty: true }).length === 0) {
                 this.clearOnLadder();
             } else {
-                if (this.cursors.up?.isDown) {
+                if (this.sprite.body.top < this.ladderTop) {
+                    this.sprite.setPosition(this.sprite.x, this.ladderTop);
+                } else if (this.sprite.body.bottom > this.ladderBottom) {
+                    this.sprite.setPosition(this.sprite.x, this.ladderBottom - this.sprite.height);
+                }
+                if (this.cursors.up?.isDown && this.sprite.body.top > this.ladderTop) {
                     vy -= WalkSpeed;
                 }
-                if (this.cursors.down?.isDown) {
+                if (this.cursors.down?.isDown && this.sprite.body.bottom < this.ladderBottom) {
                     vy += WalkSpeed;
                 }
                 if (vy !== 0) {
@@ -120,15 +162,18 @@ export class Player {
         }
     }
 
-    private setOnLadder() {
-        this.onLadder = true;
+    private setOnLadder(ladder: Phaser.Physics.Arcade.Sprite) {
+        this.usingLadder = true;
+        this.ladderTop = ladder.body.top - 8;
+        this.ladderBottom = ladder.body.bottom;
+        (this.sprite.body as Phaser.Physics.Arcade.Body).setVelocityX(0);
         (this.sprite.body as Phaser.Physics.Arcade.Body).allowGravity = false;
         this.platformsCollider.active = false;
     }
 
     private clearOnLadder() {
-        this.onLadder = false;
-        this.jumpCount = 0;
+        this.usingLadder = false;
+        this.jumpCount = JumpCount;
         (this.sprite.body as Phaser.Physics.Arcade.Body).allowGravity = true;
         this.platformsCollider.active = true;
     }

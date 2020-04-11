@@ -129,7 +129,7 @@ export class MainScene extends Phaser.Scene {
                     break;
                 case ObjTypes.player:
                     if (!this.player) {
-                        this.player = new Player(this, obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, this.platformLayer);
+                        this.player = new Player(this, obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, this.platformLayer, this.laddersGroup);
                     } else {
                         console.log("Attempted to add player twice");
                     }
@@ -148,7 +148,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     update() {
-        this.player.update(this.physics.overlap(this.player.sprite, this.laddersGroup, undefined, undefined, this));
+        this.player.update();
 
         if (--this.waterFrames === 0) {
             this.deadlyLayer.forEachTile(tile => {
