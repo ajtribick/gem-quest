@@ -139,8 +139,11 @@ export class Player {
         } else {
             var vy = 0;
             this.sprite.setX(this.ladderLeft);
-            if ((this.cursors.left?.isDown || this.cursors.right?.isDown) &&
-                    this.platforms.getTilesWithinShape(this.sprite.getBounds(), { isColliding: true, isNotEmpty: true }).length === 0) {
+            var leftDown = this.cursors.left?.isDown;
+            var rightDown = this.cursors.right?.isDown;
+            var bounds = new Phaser.Geom.Rectangle(this.sprite.x + (leftDown ? -1 : 0) + (rightDown ? 1 : 0), this.sprite.y, this.sprite.width, this.sprite.height);
+            if ((leftDown || rightDown) &&
+                    this.platforms.getTilesWithinShape(bounds, { isColliding: true, isNotEmpty: true }).length === 0) {
                 this.clearOnLadder();
             } else {
                 if (this.sprite.body.top < this.ladderTop) {
@@ -186,6 +189,7 @@ export class Player {
     die(diedCallback: Function, context: any) {
         if (!this.dead) {
             this.dead = true;
+            this.clearOnLadder();
             this.sprite.anims.stop();
             this.sprite.on('animationcomplete', () => {
                 this.scene.time.delayedCall(500, () => {
