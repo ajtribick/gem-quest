@@ -24,6 +24,7 @@ export class Player {
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private hasFriction = true;
     private usingLadder = false;
+    private ladderLeft = 0;
     private ladderTop = 0;
     private ladderBottom = 0;
     private jumpCount = 0;
@@ -137,14 +138,15 @@ export class Player {
             }
         } else {
             var vy = 0;
+            this.sprite.setX(this.ladderLeft);
             if ((this.cursors.left?.isDown || this.cursors.right?.isDown) &&
                     this.platforms.getTilesWithinShape(this.sprite.getBounds(), { isColliding: true, isNotEmpty: true }).length === 0) {
                 this.clearOnLadder();
             } else {
                 if (this.sprite.body.top < this.ladderTop) {
-                    this.sprite.setPosition(this.sprite.x, this.ladderTop);
+                    this.sprite.setY(this.ladderTop);
                 } else if (this.sprite.body.bottom > this.ladderBottom) {
-                    this.sprite.setPosition(this.sprite.x, this.ladderBottom - this.sprite.height);
+                    this.sprite.setY(this.ladderBottom - this.sprite.height);
                 }
                 if (this.cursors.up?.isDown && this.sprite.body.top > this.ladderTop) {
                     vy -= WalkSpeed;
@@ -167,7 +169,9 @@ export class Player {
         this.usingLadder = true;
         this.ladderTop = ladder.body.top - 8;
         this.ladderBottom = ladder.body.bottom;
-        (this.sprite.body as Phaser.Physics.Arcade.Body).setVelocityX(0);
+        this.ladderLeft = ladder.x - 4;
+        this.sprite.setX(this.ladderLeft);
+        this.sprite.setVelocityX(0);
         (this.sprite.body as Phaser.Physics.Arcade.Body).allowGravity = false;
         this.platformsCollider.active = false;
     }

@@ -18,10 +18,10 @@ export class LoadScene extends Phaser.Scene {
         var gameStart: GameData = {
             playerX: 16,
             playerY: 160,
-            levelX: 0,
-            levelY: 0,
-            openDoors: new Set<number>()
-        }
+            level: 11,
+            openDoors: new Set<number>(),
+            remainingGems: new Map<number, Set<number>>()
+        };
 
         this.scene.start(SceneNames.main, gameStart);
     }

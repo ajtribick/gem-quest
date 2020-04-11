@@ -8,6 +8,6 @@ export const AssetNames = {
 };
 
 export const Levels = [
-    ['level00', require('./assets/map00.json')],
-    ['level10', require('./assets/map10.json')]
+    ['level11', require('./assets/map11.json')],
+    ['level21', require('./assets/map21.json')]
 ];

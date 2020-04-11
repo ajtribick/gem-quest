@@ -1,7 +1,7 @@
 export interface GameData {
     playerX: number;
     playerY: number;
-    levelX: number;
-    levelY: number;
+    level: number;
     openDoors: Set<number>;
+    remainingGems: Map<number, Set<number>>;
 }

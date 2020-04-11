@@ -72,7 +72,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     private createMap() {
-        this.map = this.add.tilemap(AssetNames.level + this.gameData.levelX.toString() + this.gameData.levelY.toString());
+        this.map = this.add.tilemap(AssetNames.level + this.gameData.level.toString());
         var platformTiles = this.map.addTilesetImage(LocalAssets.tiles, AssetNames.tiles);
         this.platformLayer = this.map.createStaticLayer(LayerNames.platforms, platformTiles, MapX, MapY);
         this.platformLayer.setCollision([1,2,3,4,9,10]);
@@ -88,7 +88,7 @@ export class MainScene extends Phaser.Scene {
                     bottomTile = nextTile;
                 }
 
-                var ladder = this.laddersGroup.create(tile.getLeft() + tile.width / 2, (tile.getTop() + bottomTile.getBottom()) / 2, undefined) as Phaser.Physics.Arcade.Sprite;
+                var ladder = this.laddersGroup.create(tile.getLeft() + 4, (tile.getTop() + bottomTile.getBottom()) / 2, undefined) as Phaser.Physics.Arcade.Sprite;
                 ladder.setVisible(false);
                 ladder.body.setSize(2, bottomTile.getBottom() - tile.getTop());
             }
@@ -122,10 +122,27 @@ export class MainScene extends Phaser.Scene {
         Spider.createAnimation(this, 'tiles');
 
         var objsLayer = this.map.getObjectLayer(LayerNames.objects);
+        var generateGems = false;
+        var gemsSet = this.gameData.remainingGems.get(this.gameData.level);
+        if (!gemsSet) {
+            gemsSet = new Set<number>();
+            this.gameData.remainingGems.set(this.gameData.level, gemsSet);
+            generateGems = true;
+        }
+
+        var gemIndex = 0;
+
         objsLayer.objects.forEach((obj) => {
             switch (obj.type) {
                 case ObjTypes.gem:
+                    if (generateGems) {
+                        gemsSet!.add(gemIndex++);
+                    } else if (!gemsSet!.has(gemIndex++)) {
+                        break;
+                    }
+
                     var gem = (this.gemsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, 'gem1') as Phaser.Physics.Arcade.Sprite).setOrigin(0, 1);
+                    gem.setData("index", gemIndex - 1);
                     gem.body.setSize(7, 7, false);
                     gem.anims.play(Animations.gem);
                     this.gemsGroup.add(gem);
@@ -169,6 +186,7 @@ export class MainScene extends Phaser.Scene {
     private collectGem(_player: Phaser.GameObjects.GameObject, gem: Phaser.GameObjects.GameObject) {
         if (!this.player.dead) {
             (gem as Phaser.Physics.Arcade.Sprite).disableBody(true, true);
+            this.gameData.remainingGems.get(this.gameData.level)!.delete(gem.getData('index') as number);
         }
     }
 
@@ -198,19 +216,19 @@ export class MainScene extends Phaser.Scene {
     private onWorldBounds(body: Phaser.Physics.Arcade.Body, up: boolean, down: boolean, left: boolean, right: boolean) {
         if (body.gameObject.name === 'player') {
             if (up) {
-                --this.gameData.levelY;
+                --this.gameData.level
                 this.gameData.playerX = this.player.sprite.x;
                 this.gameData.playerY = this.map.heightInPixels - this.player.sprite.width + MapY;
             } else if (down) {
-                ++this.gameData.levelY;
+                ++this.gameData.level;
                 this.gameData.playerX = this.player.sprite.x;
                 this.gameData.playerY = MapY;
             } else if (left) {
-                --this.gameData.levelX;
+                this.gameData.level -= 10;
                 this.gameData.playerX = this.map.widthInPixels - this.player.sprite.width + MapX;
                 this.gameData.playerY = this.player.sprite.y;
             } else if (right) {
-                ++this.gameData.levelX;
+                this.gameData.level += 10;
                 this.gameData.playerX = MapX;
                 this.gameData.playerY = this.player.sprite.y;
             }
