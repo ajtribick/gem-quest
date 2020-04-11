@@ -13,6 +13,7 @@ const JumpSpeed = 50;
 
 export class Player {
     sprite: Phaser.Physics.Arcade.Sprite;
+    dead = false;
 
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
 
@@ -51,25 +52,35 @@ export class Player {
     }
 
     update() {
-        var playerBody = this.sprite.body as Phaser.Physics.Arcade.Body;
-        var vx = 0;
-        if (this.cursors.left?.isDown) {
-            vx -= WalkSpeed;
-        }
-        if (this.cursors.right?.isDown) {
-            vx += WalkSpeed;
-        }
-        if (vx < 0) {
-            this.sprite.anims.play(Animations.playerL, true);
-        } else if (vx > 0) {
-            this.sprite.anims.play(Animations.playerR, true);
-        } else {
-            this.sprite.anims.stop();
-        }
+        if (!this.dead) {
+            var playerBody = this.sprite.body as Phaser.Physics.Arcade.Body;
+            var vx = 0;
+            if (this.cursors.left?.isDown) {
+                vx -= WalkSpeed;
+            }
+            if (this.cursors.right?.isDown) {
+                vx += WalkSpeed;
+            }
+            if (vx < 0) {
+                this.sprite.anims.play(Animations.playerL, true);
+            } else if (vx > 0) {
+                this.sprite.anims.play(Animations.playerR, true);
+            } else {
+                this.sprite.anims.stop();
+            }
 
-        playerBody.setVelocityX(vx);
-        if (this.cursors.up?.isDown) {
-            playerBody.setVelocityY(-JumpSpeed);
+            playerBody.setVelocityX(vx);
+            if (this.cursors.up?.isDown) {
+                playerBody.setVelocityY(-JumpSpeed);
+            }
+        }
+    }
+
+    die() {
+        if (!this.dead) {
+            this.dead = true;
+            this.sprite.anims.play(Animations.playerDead);
+            this.sprite.setDragX(40);
         }
     }
 

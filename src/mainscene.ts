@@ -35,7 +35,10 @@ export class MainScene extends Phaser.Scene {
     private waterLayer!: Phaser.Tilemaps.DynamicTilemapLayer;
     private waterFrames: integer = 10;
 
-    private gemsGroup!: Phaser.GameObjects.Group;
+    private gemsGroup!: Phaser.Physics.Arcade.Group;
+    private keysGroup!: Phaser.Physics.Arcade.Group;
+    private doorsGroup!: Phaser.Physics.Arcade.Group;
+    private spidersGroup!: Phaser.Physics.Arcade.Group;
     private spiders: Spider[] = [];
     private player!: Player;
 
@@ -49,6 +52,10 @@ export class MainScene extends Phaser.Scene {
         this.createSpiders();
 
         this.physics.add.collider(this.player.sprite, this.platformLayer);
+        this.physics.add.collider(this.player.sprite, this.doorsGroup);
+        this.physics.add.overlap(this.player.sprite, this.gemsGroup, this.collectGem, undefined, this);
+        this.physics.add.overlap(this.player.sprite, this.keysGroup, this.collectKey, undefined, this);
+        this.physics.add.overlap(this.player.sprite, this.spidersGroup, this.collideSpider, undefined, this);
     }
 
     private createMap() {
@@ -63,7 +70,9 @@ export class MainScene extends Phaser.Scene {
     }
 
     private createObjects() {
-        this.gemsGroup = this.add.group();
+        this.gemsGroup = this.physics.add.group({ immovable: true, allowGravity: false });
+        this.keysGroup = this.physics.add.group({ immovable: true, allowGravity: false });
+        this.doorsGroup = this.physics.add.group({ immovable: true, allowGravity: false });
 
         this.anims.create({
             key: Animations.gem,
@@ -72,20 +81,22 @@ export class MainScene extends Phaser.Scene {
             repeat: -1
         });
 
-
         var objsLayer = this.map.getObjectLayer(LayerNames.objects);
         objsLayer.objects.forEach((obj) => {
             switch (obj.type) {
                 case 'gem':
-                    var gem = (this.gemsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, 'gem1') as Phaser.GameObjects.Sprite).setOrigin(0, 1);
+                    var gem = (this.gemsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, 'gem1') as Phaser.Physics.Arcade.Sprite).setOrigin(0, 1);
+                    gem.body.setSize(7, 7, false);
                     gem.anims.play(Animations.gem);
                     this.gemsGroup.add(gem);
                     break;
                 case 'key':
-                    this.add.sprite(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name).setOrigin(0, 1);
+                    var key = (this.keysGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite).setOrigin(0, 1);
+                    key.setData("unlocks", "door" + obj.name.slice(-1));
                     break;
                 case 'door':
-                    this.add.sprite(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name).setOrigin(0, 0);
+                    var door = (this.doorsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite).setOrigin(0, 0);
+                    door.name = obj.name;
                     break;
                 case 'player':
                     if (!this.player) {
@@ -100,10 +111,10 @@ export class MainScene extends Phaser.Scene {
 
     private createSpiders() {
         Spider.createAnimation(this, 'tiles');
-        var spidersGroup = this.physics.add.group({ allowGravity: false });
+        this.spidersGroup = this.physics.add.group({ allowGravity: false });
         var spiderLayer = this.map.getObjectLayer(LayerNames.spiders);
         spiderLayer.objects.forEach((obj) => {
-            this.spiders.push(new Spider(this, obj, spidersGroup, MapX, MapY, LocalAssets.tiles));
+            this.spiders.push(new Spider(this, obj, this.spidersGroup, MapX, MapY, LocalAssets.tiles));
         });
     }
 
@@ -122,5 +133,25 @@ export class MainScene extends Phaser.Scene {
         }
 
         this.spiders.forEach((spider) => { spider.update(); });
+    }
+
+    private collectGem(_player: Phaser.GameObjects.GameObject, gem: Phaser.GameObjects.GameObject) {
+        if (!this.player.dead) {
+            (gem as Phaser.Physics.Arcade.Sprite).disableBody(true, true);
+        }
+    }
+
+    private collectKey(_player: Phaser.GameObjects.GameObject, key: Phaser.GameObjects.GameObject) {
+        if (!this.player.dead) {
+            var sprite = key as Phaser.Physics.Arcade.Sprite;
+            sprite.disableBody(true, true);
+            var doorId = sprite.getData("unlocks") as string;
+            var door = this.children.getByName(doorId) as Phaser.Physics.Arcade.Sprite;
+            door.disableBody(true, true);
+        }
+    }
+
+    private collideSpider(_player: Phaser.GameObjects.GameObject, _spider: Phaser.GameObjects.GameObject) {
+        this.player.die();
     }
 };
