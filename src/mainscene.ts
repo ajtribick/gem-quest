@@ -38,6 +38,8 @@ const RoomNames = new Map<number, string>([
     [31, "The Final Challenge"]
 ]);
 
+const StartLives = 5;
+
 export class MainScene extends Phaser.Scene {
     private gameData!: GameData;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -62,7 +64,7 @@ export class MainScene extends Phaser.Scene {
 
     private player!: Player;
     private score = 0;
-    private lives = 9;
+    private lives = StartLives;
 
     constructor() {
         super(SceneNames.main);
@@ -74,7 +76,7 @@ export class MainScene extends Phaser.Scene {
 
     create(): void {
         this.score = 0;
-        this.lives = 9;
+        this.lives = StartLives;
         this.spiders.length = 0;
         this.add.bitmapText(0, 0, AssetNames.font, "Score:");
         this.add.bitmapText(192, 0, AssetNames.font, "Lives:");
