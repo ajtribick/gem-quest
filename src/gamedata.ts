@@ -8,7 +8,10 @@ export interface GameData {
 }
 
 export const SceneNames = {
-    main: "main"
+    menu: 'menu',
+    main: 'main',
+    gameOver: 'gameOver',
+    win: 'win'
 };
 
 export const AssetNames = {

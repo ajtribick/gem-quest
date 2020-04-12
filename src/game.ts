@@ -1,9 +1,13 @@
 import 'phaser';
 import {LoadScene} from './loadscene';
+import {MenuScene} from './menuscene';
 import {MainScene} from './mainscene';
+import {GameOverScene} from './gameoverscene';
+import {WinScene} from './winscene';
+
 
 const config: Phaser.Types.Core.GameConfig = {
-    scene: [LoadScene, MainScene],
+    scene: [LoadScene, MenuScene, MainScene, GameOverScene, WinScene],
     scale: {
         width: 256,
         height: 192,

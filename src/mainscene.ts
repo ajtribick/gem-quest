@@ -71,20 +71,6 @@ export class MainScene extends Phaser.Scene {
     }
 
     create(): void {
-        var fontConfig: Phaser.Types.GameObjects.BitmapText.RetroFontConfig = {
-            image: AssetNames.font,
-            width: 8,
-            height: 8,
-            chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,?!:/[]() ',
-            "offset.x": 0,
-            "offset.y": 0,
-            "spacing.x": 0,
-            "spacing.y": 0,
-            lineSpacing: 0,
-            charsPerRow: 72
-        };
-
-        this.cache.bitmapFont.add(AssetNames.font, Phaser.GameObjects.RetroFont.Parse(this, fontConfig));
         this.add.bitmapText(0, 0, AssetNames.font, "Score:");
         this.add.bitmapText(192, 0, AssetNames.font, "Lives:");
         this.roomNameText = this.add.bitmapText(0, 184, AssetNames.font, "Loading");
@@ -143,7 +129,8 @@ export class MainScene extends Phaser.Scene {
 
         var roomName = RoomNames.get(this.gameData.level) ?? "Error";
         this.roomNameText.setX(128 - roomName.length*4);
-        this.roomNameText.setText(roomName)
+        this.roomNameText.setText(roomName);
+        this.livesText.setText(this.lives.toString());
     }
 
     private createMap(): void {
@@ -291,12 +278,15 @@ export class MainScene extends Phaser.Scene {
         if (!this.player.dead) {
             this.player.die(this.onDied, this);
             --this.lives;
-            this.livesText.setText(this.lives.toString());
         }
     }
 
     private onDied(): void {
-        this.transition();
+        if (this.lives < 0) {
+            this.scene.start(SceneNames.gameOver);
+        } else {
+            this.transition();
+        }
     }
 
     private onWorldBounds(body: Phaser.Physics.Arcade.Body, up: boolean, down: boolean, left: boolean, right: boolean): void {
