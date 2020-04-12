@@ -5,13 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gem Quest</title>
     <link rel="stylesheet" href="index.css"/>
+    <meta property="og:title" content="Gem Quest">
+    <meta property="og:description" content="A retro platformer inspired by games released on the BBC Micro"/>
+    <meta property="og:image" content="https://tribs-stuff.neocities.org/gemquest/preview.png"/>
+    <meta property="og:url" content="https://tribs-stuff.neocities.org/gemquest/"/>
+    <meta name="twitter:card" content="summary_large_image"/>
 </head>
 <body>
     <div id="main">
         <h1>Gem Quest</h1>
         <div id="game-host" style="width:800px; height:600px"></div>
-        <script src="game.ts"></script>
         <p>Collect all gems to open the exit. Use the arrow keys to move.</p>
+        <ul class="links">
+            <li><a href="https://phaser.io">Phaser</a></li>
+            <li><a href="http://www.drpetter.se/project_sfxr.html">sfxr</a></li>
+        </ul>
     </div>
+    <script src="game.ts" defer></script>
 </body>
 </html>

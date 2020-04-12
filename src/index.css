@@ -2,6 +2,7 @@ html {
     background-color: #333333;
     color: #999999;
     font-family: sans-serif;
+    font-size: 0.9em;
 }
 
 #game-host, #main {
@@ -12,4 +13,34 @@ html {
 
 #game-host>canvas {
     border: 8px solid black;
+}
+
+a:link {
+    color: #6699ee;
+}
+
+a:visited {
+    color: #9966cc;
+}
+
+a:active {
+    color: #ee9933;
+}
+
+a:hover {
+    color: #99ccee;
+}
+
+ul.links {
+    list-style-type: none;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+ul.links>li {
+    display: inline;
+}
+
+ul.links>li+li::before {
+    content: " | ";
 }
