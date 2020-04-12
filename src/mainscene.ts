@@ -1,6 +1,5 @@
 import 'phaser';
-import {SceneNames, AssetNames} from './consts';
-import {GameData} from './gamedata';
+import {GameData, SceneNames, AssetNames} from './gamedata';
 import {Player} from './player';
 import {Spider} from './spider';
 

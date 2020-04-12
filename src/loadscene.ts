@@ -1,6 +1,5 @@
 import 'phaser';
-import {SceneNames, AssetNames, Levels} from './consts';
-import {GameData} from './gamedata';
+import {SceneNames, AssetNames, Levels, GameData} from './gamedata';
 
 export class LoadScene extends Phaser.Scene {
     constructor() {
