@@ -9,8 +9,8 @@ export class GameOverScene extends Phaser.Scene {
     create(): void {
         this.add.bitmapText(92, 64, AssetNames.font, "GAME OVER");
         var text = this.add.bitmapText(76, 128, AssetNames.font, "[Start again]").setInteractive();
-        text.on('pointerover', () => { text.setTint(0xffff00); });
-        text.on('pointerdown', () => { text.setTint(0xff0000); });
+        text.on('pointerover', () => { text.setTint(0x00ff00); });
+        text.on('pointerdown', () => { text.setTint(0xffff00); });
         text.on('pointerup', () => {
             var gameStart: GameData = {
                 startX: 16,

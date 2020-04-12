@@ -30,15 +30,6 @@ export class LoadScene extends Phaser.Scene {
         };
         this.cache.bitmapFont.add(AssetNames.font, Phaser.GameObjects.RetroFont.Parse(this, fontConfig));
 
-        var gameStart: GameData = {
-            startX: 16,
-            startY: 160,
-            onLadder: false,
-            level: 11,
-            openDoors: new Set<number>(),
-            remainingGems: new Map<number, Set<number>>()
-        };
-
-        this.scene.start(SceneNames.menu, gameStart);
+        this.scene.start(SceneNames.menu);
     }
 };

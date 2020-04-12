@@ -1,7 +1,7 @@
 {
-  "name": "example_game",
+  "name": "gem_quest",
   "version": "1.0.0",
-  "description": "Tutorial game",
+  "description": "Gem Quest",
   "main": "src/index.html",
   "scripts": {
     "build": "parcel build src/index.html --public-url ./",

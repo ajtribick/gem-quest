@@ -10,8 +10,8 @@ export class WinScene extends Phaser.Scene {
         this.add.bitmapText(64, 64, AssetNames.font, "CONGRATULATIONS!");
         this.add.bitmapText(64, 80, AssetNames.font, "A winner is you!");
         var text = this.add.bitmapText(76, 128, AssetNames.font, "[Start again]").setInteractive();
-        text.on('pointerover', () => { text.setTint(0xffff00); });
-        text.on('pointerdown', () => { text.setTint(0xff0000); });
+        text.on('pointerover', () => { text.setTint(0x00ff00); });
+        text.on('pointerdown', () => { text.setTint(0xffff00); });
         text.on('pointerup', () => {
             var gameStart: GameData = {
                 startX: 16,
