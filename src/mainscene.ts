@@ -14,7 +14,8 @@ const ObjTypes = {
     gem: 'gem',
     key: 'key',
     door: 'door',
-    spider: 'spider'
+    spider: 'spider',
+    magicDoor: 'magicdoor'
 };
 
 const LocalAssets = {
@@ -23,7 +24,8 @@ const LocalAssets = {
 
 const Animations = {
     gem: 'gem',
-    spider: 'spider'
+    spider: 'spider',
+    magicDoor: 'magicdoor',
 };
 
 const MapX = 0;
@@ -60,7 +62,7 @@ export class MainScene extends Phaser.Scene {
 
     private player!: Player;
     private score = 0;
-    private lives = 5;
+    private lives = 9;
 
     constructor() {
         super(SceneNames.main);
@@ -99,9 +101,16 @@ export class MainScene extends Phaser.Scene {
         this.anims.create({
             key: Animations.gem,
             frames: this.anims.generateFrameNames(LocalAssets.tiles, { prefix: 'gem', start: 1, end: 4 }),
-            frameRate: 5,
+            frameRate: 4,
             repeat: -1
         });
+
+        this.anims.create({
+            key: Animations.magicDoor,
+            frames: this.anims.generateFrameNames(LocalAssets.tiles, { prefix: 'door', start: 1, end: 4 }),
+            frameRate: 2,
+            repeat: -1
+        })
     }
 
     private createLevel(): void {
@@ -210,6 +219,13 @@ export class MainScene extends Phaser.Scene {
                 case ObjTypes.spider:
                     this.spiders.push(new Spider(this, obj, this.spidersGroup, MapX, MapY, LocalAssets.tiles));
                     break;
+                case ObjTypes.magicDoor:
+                    if (!this.hasAllGems()) {
+                        var door = (this.doorsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, "door1") as Phaser.Physics.Arcade.Sprite).setOrigin(0, 0);
+                        door.name = obj.name;
+                        door.anims.play(Animations.magicDoor);
+                    }
+                    break;
             }
         });
     }
@@ -246,8 +262,14 @@ export class MainScene extends Phaser.Scene {
 
     private collectGem(_player: Phaser.GameObjects.GameObject, gem: Phaser.GameObjects.GameObject): void {
         if (!this.player.dead) {
-            (gem as Phaser.Physics.Arcade.Sprite).disableBody(true, true);
             this.gameData.remainingGems.get(this.gameData.level)!.delete(gem.getData('index') as number);
+            if (this.hasAllGems()) {
+                var door = this.children.getByName('magicdoor') as (Phaser.Physics.Arcade.Sprite | null);
+                if (door) {
+                    door.destroy();
+                }
+            }
+            gem.destroy();
             this.addScore(20);
         }
     }
@@ -255,12 +277,12 @@ export class MainScene extends Phaser.Scene {
     private collectKey(_player: Phaser.GameObjects.GameObject, key: Phaser.GameObjects.GameObject): void {
         if (!this.player.dead) {
             var sprite = key as Phaser.Physics.Arcade.Sprite;
-            sprite.disableBody(true, true);
             var doorId = sprite.getData("unlocks") as string;
-            var door = this.children.getByName(doorId) as Phaser.Physics.Arcade.Sprite;
+            var door = this.children.getByName(doorId) as (Phaser.Physics.Arcade.Sprite | null);
             if (door) {
-                door.disableBody(true, true);
+                door.destroy();
             }
+            sprite.destroy();
             this.gameData.openDoors.add(parseInt(doorId.slice(-1)));
             this.addScore(50);
         }
@@ -283,7 +305,7 @@ export class MainScene extends Phaser.Scene {
 
     private onDied(): void {
         if (this.lives < 0) {
-            this.scene.start(SceneNames.gameOver);
+            this.scene.start(SceneNames.gameOver, { finalScore: this.score });
         } else {
             this.transition();
         }
@@ -310,7 +332,7 @@ export class MainScene extends Phaser.Scene {
             }
 
             if (this.gameData.level >= 40) {
-                console.log("Congratulations!");
+                this.scene.start(SceneNames.win, { finalScore: this.score });
             } else {
                 this.gameData.onLadder = this.player.onLadder;
                 this.transition();
@@ -321,5 +343,16 @@ export class MainScene extends Phaser.Scene {
     private addScore(points: number): void {
         this.score += points;
         this.scoreText.setText(this.score.toString());
+    }
+
+    private hasAllGems(): boolean {
+        if (this.gameData.remainingGems.size !== 4) { return false; }
+
+        var valuesIterator = this.gameData.remainingGems.values();
+        for (;;) {
+            var result = valuesIterator.next();
+            if (result.done) { return true; }
+            if (result.value.size > 0) { return false; }
+        }
     }
 };
