@@ -44,7 +44,7 @@ export class Player {
         this.platformsCollider = scene.physics.add.collider(this.sprite, platforms);
     }
 
-    static createAnimations(scene: Phaser.Scene, key: string) {
+    static createAnimations(scene: Phaser.Scene, key: string): void {
         scene.anims.create({
             key: Animations.playerR,
             frames: scene.anims.generateFrameNames(key, { prefix: 'playerR', frames: [1, 2, 3, 2] }),
@@ -74,7 +74,7 @@ export class Player {
         });
     }
 
-    update() {
+    update(): void {
         if (this.dead) { return; }
 
         var playerBody = this.sprite.body as Phaser.Physics.Arcade.Body;
@@ -170,7 +170,7 @@ export class Player {
         }
     }
 
-    private setOnLadder(ladder: Phaser.Physics.Arcade.Sprite) {
+    private setOnLadder(ladder: Phaser.Physics.Arcade.Sprite): void {
         this.usingLadder = true;
         this.ladderTop = ladder.body.top - 8;
         this.ladderBottom = ladder.body.bottom;
@@ -181,14 +181,14 @@ export class Player {
         this.platformsCollider.active = false;
     }
 
-    private clearOnLadder() {
+    private clearOnLadder(): void {
         this.usingLadder = false;
         this.jumpCount = JumpCount;
         (this.sprite.body as Phaser.Physics.Arcade.Body).allowGravity = true;
         this.platformsCollider.active = true;
     }
 
-    die(diedCallback: Function, context: any) {
+    die(diedCallback: Function, context: any): void {
         if (!this.dead) {
             this.dead = true;
             this.clearOnLadder();
@@ -205,7 +205,7 @@ export class Player {
         }
     }
 
-    destroy() {
+    destroy(): void {
         this.sprite.destroy();
     }
 }

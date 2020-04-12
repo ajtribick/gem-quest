@@ -52,11 +52,11 @@ export class MainScene extends Phaser.Scene {
         super(SceneNames.main);
     }
 
-    init(data: any) {
+    init(data: any): void {
         this.gameData = data as GameData;
     }
 
-    create() {
+    create(): void {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         this.createGroups();
@@ -65,7 +65,7 @@ export class MainScene extends Phaser.Scene {
         this.physics.world.on('worldbounds', this.onWorldBounds, this);
     }
 
-    private createGroups() {
+    private createGroups(): void {
         this.laddersGroup = this.physics.add.staticGroup();
         this.spikesGroup = this.physics.add.group({ immovable: true, allowGravity: false });
         this.gemsGroup = this.physics.add.group({ immovable: true, allowGravity: false });
@@ -84,7 +84,7 @@ export class MainScene extends Phaser.Scene {
         });
     }
 
-    private createLevel() {
+    private createLevel(): void {
         this.createMap();
         this.createObjects();
 
@@ -99,7 +99,7 @@ export class MainScene extends Phaser.Scene {
         this.deadlyLayer.setTileIndexCallback([17, 18], this.collideDeathTile, this);
     }
 
-    private createMap() {
+    private createMap(): void {
         this.map = this.add.tilemap(AssetNames.level + this.gameData.level.toString());
         var platformTiles = this.map.addTilesetImage(LocalAssets.tiles, AssetNames.tiles);
         this.platformLayer = this.map.createStaticLayer(LayerNames.platforms, platformTiles, MapX, MapY);
@@ -133,7 +133,7 @@ export class MainScene extends Phaser.Scene {
         });
     }
 
-    private createObjects() {
+    private createObjects(): void {
         var objsLayer = this.map.getObjectLayer(LayerNames.objects);
         var generateGems = false;
         var gemsSet = this.gameData.remainingGems.get(this.gameData.level);
@@ -179,7 +179,7 @@ export class MainScene extends Phaser.Scene {
         });
     }
 
-    private transition() {
+    private transition(): void {
         this.map.destroy();
         this.player.destroy();
         this.gemsGroup.clear(true, true);
@@ -192,7 +192,7 @@ export class MainScene extends Phaser.Scene {
         this.createLevel();
     }
 
-    update() {
+    update(): void {
         this.player.update();
 
         if (--this.waterFrames === 0) {
@@ -209,14 +209,14 @@ export class MainScene extends Phaser.Scene {
         this.spiders.forEach(spider => { spider.update(); });
     }
 
-    private collectGem(_player: Phaser.GameObjects.GameObject, gem: Phaser.GameObjects.GameObject) {
+    private collectGem(_player: Phaser.GameObjects.GameObject, gem: Phaser.GameObjects.GameObject): void {
         if (!this.player.dead) {
             (gem as Phaser.Physics.Arcade.Sprite).disableBody(true, true);
             this.gameData.remainingGems.get(this.gameData.level)!.delete(gem.getData('index') as number);
         }
     }
 
-    private collectKey(_player: Phaser.GameObjects.GameObject, key: Phaser.GameObjects.GameObject) {
+    private collectKey(_player: Phaser.GameObjects.GameObject, key: Phaser.GameObjects.GameObject): void {
         if (!this.player.dead) {
             var sprite = key as Phaser.Physics.Arcade.Sprite;
             sprite.disableBody(true, true);
@@ -227,19 +227,19 @@ export class MainScene extends Phaser.Scene {
         }
     }
 
-    private collideDeath(_player: Phaser.GameObjects.GameObject, _enemy: Phaser.GameObjects.GameObject) {
+    private collideDeath(_player: Phaser.GameObjects.GameObject, _enemy: Phaser.GameObjects.GameObject): void {
         this.player.die(this.onDied, this);
     }
 
-    private collideDeathTile(_player: Phaser.GameObjects.GameObject, _tile: Phaser.Tilemaps.Tile) {
+    private collideDeathTile(_player: Phaser.GameObjects.GameObject, _tile: Phaser.Tilemaps.Tile): void {
         this.player.die(this.onDied, this);
     }
 
-    private onDied() {
+    private onDied(): void {
         this.transition();
     }
 
-    private onWorldBounds(body: Phaser.Physics.Arcade.Body, up: boolean, down: boolean, left: boolean, right: boolean) {
+    private onWorldBounds(body: Phaser.Physics.Arcade.Body, up: boolean, down: boolean, left: boolean, right: boolean): void {
         if (body.gameObject.name === 'player') {
             if (up) {
                 --this.gameData.level

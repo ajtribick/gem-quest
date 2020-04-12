@@ -48,7 +48,7 @@ export class Spider {
         });
     }
 
-    static createAnimation(scene: Phaser.Scene, key: string) {
+    static createAnimation(scene: Phaser.Scene, key: string): void {
         scene.anims.create({
             key: Animation,
             frames: scene.anims.generateFrameNames(key, { prefix: 'spider', start: 1, end: 2 }),
@@ -57,7 +57,7 @@ export class Spider {
         });
     }
 
-    update() {
+    update(): void {
         var t = this.spider.z;
         this.path.getPoint(t, this.vector);
         this.spider.setPosition(this.vector.x, this.vector.y);

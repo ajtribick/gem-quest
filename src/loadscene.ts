@@ -6,14 +6,14 @@ export class LoadScene extends Phaser.Scene {
         super('myScene');
     }
 
-    preload() {
+    preload(): void {
         this.load.atlas(AssetNames.tiles, require('./assets/tiles.png'), require('./assets/atlas.json'));
         Levels.forEach(level => {
             this.load.tilemapTiledJSON(level[0], level[1]);
         });
     }
 
-    create() {
+    create(): void {
         var gameStart: GameData = {
             playerX: 16,
             playerY: 160,
