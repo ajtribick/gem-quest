@@ -21,5 +21,6 @@ export class GameOverScene extends Phaser.Scene {
         text.on('pointerdown', () => { text.setTint(0xffff00); });
         text.on('pointerup', () => { this.scene.start(SceneNames.main, createStartData()); });
         text.on('pointerout', () => { text.setTint(); });
+        this.sound.play(AssetNames.dieSound);
     }
 }

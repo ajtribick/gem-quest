@@ -73,6 +73,9 @@ export class MainScene extends Phaser.Scene {
     }
 
     create(): void {
+        this.score = 0;
+        this.lives = 9;
+        this.spiders.length = 0;
         this.add.bitmapText(0, 0, AssetNames.font, "Score:");
         this.add.bitmapText(192, 0, AssetNames.font, "Lives:");
         this.roomNameText = this.add.bitmapText(0, 184, AssetNames.font, "Loading");
@@ -271,6 +274,7 @@ export class MainScene extends Phaser.Scene {
             }
             gem.destroy();
             this.addScore(20);
+            this.sound.play(AssetNames.gemSound);
         }
     }
 
@@ -285,6 +289,7 @@ export class MainScene extends Phaser.Scene {
             sprite.destroy();
             this.gameData.openDoors.add(parseInt(doorId.slice(-1)));
             this.addScore(50);
+            this.sound.play(AssetNames.keySound);
         }
     }
 
@@ -300,6 +305,7 @@ export class MainScene extends Phaser.Scene {
         if (!this.player.dead) {
             this.player.die(this.onDied, this);
             --this.lives;
+            this.sound.play(AssetNames.dieSound);
         }
     }
 

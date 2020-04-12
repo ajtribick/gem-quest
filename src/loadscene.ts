@@ -13,6 +13,12 @@ export class LoadScene extends Phaser.Scene {
         });
         this.load.image(AssetNames.font, require('./assets/font.png'));
 
+        this.load.audio(AssetNames.gemSound, require('./assets/gem.mp3'));
+        this.load.audio(AssetNames.keySound, require('./assets/key.mp3'));
+        this.load.audio(AssetNames.dieSound, require('./assets/die.mp3'));
+        this.load.audio(AssetNames.jumpSound, require('./assets/jump.mp3'));
+        this.load.audio(AssetNames.landSound, require('./assets/land.mp3'));
+        this.load.audio(AssetNames.winSound, require('./assets/win.mp3'));
     }
 
     create(): void {

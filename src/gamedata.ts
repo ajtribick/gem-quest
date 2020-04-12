@@ -21,7 +21,13 @@ export const SceneNames = {
 export const AssetNames = {
     level: 'level',
     tiles: 'tiles',
-    font: 'font'
+    font: 'font',
+    gemSound: 'gem',
+    keySound: 'key',
+    dieSound: 'die',
+    jumpSound: 'jump',
+    landSound: 'land',
+    winSound: 'win'
 };
 
 export const Levels = [

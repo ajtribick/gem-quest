@@ -1,4 +1,5 @@
 import 'phaser'
+import { AssetNames } from './gamedata';
 
 const Animations = {
     playerL: 'playerL',
@@ -28,6 +29,7 @@ export class Player {
     private ladderTop = 0;
     private ladderBottom = 0;
     private jumpCount = 0;
+    private wasOnFloor = true;
 
     constructor(scene: Phaser.Scene, x: number, y: number, key: string,
                 platforms: Phaser.Tilemaps.StaticTilemapLayer,
@@ -84,11 +86,17 @@ export class Player {
 
         var hasFriction = this.hasFriction;
         this.hasFriction = false;
-        if (playerBody.onFloor()) {
+        var onFloor = playerBody.onFloor();
+        if (onFloor) {
+            if (!this.wasOnFloor && this.jumpCount < 8) {
+                this.scene.sound.play(AssetNames.landSound);
+            }
             this.jumpCount = JumpCount;
         } else if (this.jumpCount > 0) {
             --this.jumpCount;
         }
+
+        this.wasOnFloor = onFloor;
 
         var leftDown = this.cursors.left?.isDown;
         var rightDown = this.cursors.right?.isDown;
@@ -135,6 +143,9 @@ export class Player {
                     this.setOnLadder(ladder);
                 } else if (this.jumpCount > 0) {
                     playerBody.setVelocityY(-JumpSpeed);
+                    if (this.jumpCount == JumpCount) {
+                        this.scene.sound.play(AssetNames.jumpSound);
+                    }
                 }
             }
             if (this.cursors.down?.isDown && ladder && !(leftDown || rightDown)) {
