@@ -11,8 +11,9 @@ html {
     text-align: center;
 }
 
-#game-host>canvas {
-    border: 8px solid black;
+#game-host {
+    padding: 4px;
+    background-color: black;
 }
 
 a:link {
