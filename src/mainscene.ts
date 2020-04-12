@@ -31,6 +31,7 @@ const MapY = 8;
 
 export class MainScene extends Phaser.Scene {
     private gameData!: GameData;
+    private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private map!: Phaser.Tilemaps.Tilemap;
     private platformLayer!: Phaser.Tilemaps.StaticTilemapLayer;
     private deadlyLayer!: Phaser.Tilemaps.DynamicTilemapLayer;
@@ -42,7 +43,9 @@ export class MainScene extends Phaser.Scene {
     private spidersGroup!: Phaser.Physics.Arcade.Group;
     private spikesGroup!: Phaser.Physics.Arcade.Group;
     private laddersGroup!: Phaser.Physics.Arcade.StaticGroup;
+
     private spiders: Spider[] = [];
+
     private player!: Player;
 
     constructor() {
@@ -54,10 +57,38 @@ export class MainScene extends Phaser.Scene {
     }
 
     create() {
+        this.cursors = this.input.keyboard.createCursorKeys();
+
+        this.createGroups();
+        this.createLevel();
+
+        this.physics.world.on('worldbounds', this.onWorldBounds, this);
+    }
+
+    private createGroups() {
+        this.laddersGroup = this.physics.add.staticGroup();
+        this.spikesGroup = this.physics.add.group({ immovable: true, allowGravity: false });
+        this.gemsGroup = this.physics.add.group({ immovable: true, allowGravity: false });
+        this.keysGroup = this.physics.add.group({ immovable: true, allowGravity: false });
+        this.doorsGroup = this.physics.add.group({ immovable: true, allowGravity: false });
+        this.spidersGroup = this.physics.add.group({ allowGravity: false });
+
+        Spider.createAnimation(this, AssetNames.tiles);
+        Player.createAnimations(this, AssetNames.tiles);
+
+        this.anims.create({
+            key: Animations.gem,
+            frames: this.anims.generateFrameNames(LocalAssets.tiles, { prefix: 'gem', start: 1, end: 4 }),
+            frameRate: 5,
+            repeat: -1
+        });
+    }
+
+    private createLevel() {
         this.createMap();
         this.createObjects();
 
-        this.player = new Player(this, this.gameData.playerX, this.gameData.playerY, AssetNames.tiles, this.platformLayer, this.laddersGroup);
+        this.player = new Player(this, this.gameData.playerX, this.gameData.playerY, AssetNames.tiles, this.platformLayer, this.laddersGroup, this.cursors);
 
         this.physics.add.collider(this.player.sprite, this.doorsGroup);
         this.physics.add.overlap(this.player.sprite, this.gemsGroup, this.collectGem, undefined, this);
@@ -66,8 +97,6 @@ export class MainScene extends Phaser.Scene {
         this.physics.add.overlap(this.player.sprite, this.spikesGroup, this.collideDeath, undefined, this);
         this.physics.add.overlap(this.player.sprite, this.deadlyLayer);
         this.deadlyLayer.setTileIndexCallback([17, 18], this.collideDeathTile, this);
-
-        this.physics.world.on('worldbounds', this.onWorldBounds, this);
     }
 
     private createMap() {
@@ -77,7 +106,7 @@ export class MainScene extends Phaser.Scene {
         this.platformLayer.setCollision([1,2,3,4,9,10]);
 
         var ladderLayer = this.map.createStaticLayer(LayerNames.ladders, platformTiles, MapX, MapY);
-        this.laddersGroup = this.physics.add.staticGroup();
+
         ladderLayer.forEachTile((tile : Phaser.Tilemaps.Tile) => {
             if (tile.index === 12 && (tile.y === 0 || ladderLayer.getTileAt(tile.x, tile.y - 1, true).index !== 12)) {
                 var bottomTile = tile;
@@ -94,7 +123,6 @@ export class MainScene extends Phaser.Scene {
         });
 
         this.deadlyLayer = this.map.createDynamicLayer(LayerNames.deadly, platformTiles, MapX, MapY);
-        this.spikesGroup = this.physics.add.group({ immovable: true, allowGravity: false });
         this.deadlyLayer.forEachTile(tile => {
             if (tile.index === 20) {
                 var spikes = this.spikesGroup.create(tile.pixelX + MapX, tile.pixelY + MapY + 4, AssetNames.tiles, "spikes") as Phaser.Physics.Arcade.Sprite;
@@ -106,20 +134,6 @@ export class MainScene extends Phaser.Scene {
     }
 
     private createObjects() {
-        this.gemsGroup = this.physics.add.group({ immovable: true, allowGravity: false });
-        this.keysGroup = this.physics.add.group({ immovable: true, allowGravity: false });
-        this.doorsGroup = this.physics.add.group({ immovable: true, allowGravity: false });
-        this.spidersGroup = this.physics.add.group({ allowGravity: false });
-
-        this.anims.create({
-            key: Animations.gem,
-            frames: this.anims.generateFrameNames(LocalAssets.tiles, { prefix: 'gem', start: 1, end: 4 }),
-            frameRate: 5,
-            repeat: -1
-        });
-
-        Spider.createAnimation(this, 'tiles');
-
         var objsLayer = this.map.getObjectLayer(LayerNames.objects);
         var generateGems = false;
         var gemsSet = this.gameData.remainingGems.get(this.gameData.level);
@@ -163,6 +177,19 @@ export class MainScene extends Phaser.Scene {
                     break;
             }
         });
+    }
+
+    private transition() {
+        this.map.destroy();
+        this.player.destroy();
+        this.gemsGroup.clear(true, true);
+        this.keysGroup.clear(true, true);
+        this.doorsGroup.clear(true, true);
+        this.spidersGroup.clear(true, true);
+        this.spikesGroup.clear(true, true);
+        this.laddersGroup.clear(true, true);
+        this.spiders.length = 0;
+        this.createLevel();
     }
 
     update() {
@@ -209,7 +236,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     private onDied() {
-        this.scene.restart(this.gameData);
+        this.transition();
     }
 
     private onWorldBounds(body: Phaser.Physics.Arcade.Body, up: boolean, down: boolean, left: boolean, right: boolean) {
@@ -232,8 +259,7 @@ export class MainScene extends Phaser.Scene {
                 this.gameData.playerY = this.player.sprite.y;
             }
 
-            console.log("Restart");
-            this.scene.restart(this.gameData);
+            this.transition();
         }
     }
 };

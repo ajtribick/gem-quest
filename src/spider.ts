@@ -62,8 +62,4 @@ export class Spider {
         this.path.getPoint(t, this.vector);
         this.spider.setPosition(this.vector.x, this.vector.y);
     }
-
-    destroy() {
-        this.spider.destroy();
-    }
 }

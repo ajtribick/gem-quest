@@ -31,11 +31,20 @@ export class Player {
 
     constructor(scene: Phaser.Scene, x: number, y: number, key: string,
                 platforms: Phaser.Tilemaps.StaticTilemapLayer,
-                ladders: Phaser.Physics.Arcade.StaticGroup) {
+                ladders: Phaser.Physics.Arcade.StaticGroup,
+                cursors: Phaser.Types.Input.Keyboard.CursorKeys) {
         this.scene = scene;
         this.platforms = platforms;
         this.ladders = ladders;
+        this.cursors = cursors;
 
+        this.sprite = scene.physics.add.sprite(x!, y!, key, 'playerR1').setName('player').setOrigin(0, 0).setCollideWorldBounds(true);
+        (this.sprite.body as Phaser.Physics.Arcade.Body).onWorldBounds = true;
+        platforms.setTileIndexCallback([0, 1, 2, 3], () => { this.hasFriction = true; }, this);
+        this.platformsCollider = scene.physics.add.collider(this.sprite, platforms);
+    }
+
+    static createAnimations(scene: Phaser.Scene, key: string) {
         scene.anims.create({
             key: Animations.playerR,
             frames: scene.anims.generateFrameNames(key, { prefix: 'playerR', frames: [1, 2, 3, 2] }),
@@ -63,13 +72,6 @@ export class Player {
             frameRate: AnimationRate / 2,
             repeat: 0
         });
-
-        this.cursors = scene.input.keyboard.createCursorKeys();
-
-        this.sprite = scene.physics.add.sprite(x!, y!, key, 'playerR1').setName('player').setOrigin(0, 0).setCollideWorldBounds(true);
-        (this.sprite.body as Phaser.Physics.Arcade.Body).onWorldBounds = true;
-        platforms.setTileIndexCallback([0, 1, 2, 3], () => { this.hasFriction = true; }, this);
-        this.platformsCollider = scene.physics.add.collider(this.sprite, platforms);
     }
 
     update() {
