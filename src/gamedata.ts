@@ -1,6 +1,7 @@
 export interface GameData {
-    playerX: number;
-    playerY: number;
+    startX: number;
+    startY: number;
+    onLadder: boolean;
     level: number;
     openDoors: Set<number>;
     remainingGems: Map<number, Set<number>>;
@@ -17,5 +18,6 @@ export const AssetNames = {
 
 export const Levels = [
     ['level11', require('./assets/map11.json')],
-    ['level21', require('./assets/map21.json')]
+    ['level12', require('./assets/map12.json')],
+    ['level21', require('./assets/map21.json')],
 ];

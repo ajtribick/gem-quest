@@ -15,6 +15,7 @@ const JumpCount = 12;
 
 export class Player {
     sprite: Phaser.Physics.Arcade.Sprite;
+    onLadder = false;
     dead = false;
 
     private scene: Phaser.Scene;
@@ -23,7 +24,6 @@ export class Player {
     private platformsCollider: Phaser.Physics.Arcade.Collider;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private hasFriction = true;
-    private usingLadder = false;
     private ladderLeft = 0;
     private ladderTop = 0;
     private ladderBottom = 0;
@@ -40,7 +40,7 @@ export class Player {
 
         this.sprite = scene.physics.add.sprite(x!, y!, key, 'playerR1').setName('player').setOrigin(0, 0).setCollideWorldBounds(true);
         (this.sprite.body as Phaser.Physics.Arcade.Body).onWorldBounds = true;
-        platforms.setTileIndexCallback([0, 1, 2, 3], () => { this.hasFriction = true; }, this);
+        platforms.setTileIndexCallback([1, 2, 3, 4], () => { this.hasFriction = true; }, this);
         this.platformsCollider = scene.physics.add.collider(this.sprite, platforms);
     }
 
@@ -90,7 +90,7 @@ export class Player {
         var leftDown = this.cursors.left?.isDown;
         var rightDown = this.cursors.right?.isDown;
 
-        if (!this.usingLadder) {
+        if (!this.onLadder) {
             var vx: number;
             if (hasFriction) {
                 vx = 0;
@@ -125,8 +125,7 @@ export class Player {
 
             playerBody.setVelocityX(vx);
 
-            var ladder: Phaser.Physics.Arcade.Sprite | null = null;
-            this.scene.physics.overlap(this.sprite, this.ladders, (_p, l) => { ladder = l as Phaser.Physics.Arcade.Sprite; }, undefined, this);
+            var ladder = this.getLadder();
 
             if (this.cursors.up?.isDown) {
                 if (ladder && !(leftDown || rightDown)) {
@@ -170,11 +169,18 @@ export class Player {
         }
     }
 
-    private setOnLadder(ladder: Phaser.Physics.Arcade.Sprite): void {
-        this.usingLadder = true;
+    public getLadder(): Phaser.Physics.Arcade.Sprite | null {
+        var ladder: Phaser.Physics.Arcade.Sprite | null = null;
+        this.scene.physics.overlap(this.sprite, this.ladders, (_p, l) => { ladder = l as Phaser.Physics.Arcade.Sprite; }, undefined, this);
+        return ladder;
+    }
+
+    public setOnLadder(ladder: Phaser.Physics.Arcade.Sprite): void {
+        this.onLadder = true;
         this.ladderTop = ladder.body.top - 8;
         this.ladderBottom = ladder.body.bottom;
         this.ladderLeft = ladder.x - 4;
+        this.sprite.setFrame('playerUD1');
         this.sprite.setX(this.ladderLeft);
         this.sprite.setVelocityX(0);
         (this.sprite.body as Phaser.Physics.Arcade.Body).allowGravity = false;
@@ -182,7 +188,7 @@ export class Player {
     }
 
     private clearOnLadder(): void {
-        this.usingLadder = false;
+        this.onLadder = false;
         this.jumpCount = JumpCount;
         (this.sprite.body as Phaser.Physics.Arcade.Body).allowGravity = true;
         this.platformsCollider.active = true;

@@ -88,7 +88,7 @@ export class MainScene extends Phaser.Scene {
         this.createMap();
         this.createObjects();
 
-        this.player = new Player(this, this.gameData.playerX, this.gameData.playerY, AssetNames.tiles, this.platformLayer, this.laddersGroup, this.cursors);
+        this.player = new Player(this, this.gameData.startX, this.gameData.startY, AssetNames.tiles, this.platformLayer, this.laddersGroup, this.cursors);
 
         this.physics.add.collider(this.player.sprite, this.doorsGroup);
         this.physics.add.overlap(this.player.sprite, this.gemsGroup, this.collectGem, undefined, this);
@@ -97,10 +97,20 @@ export class MainScene extends Phaser.Scene {
         this.physics.add.overlap(this.player.sprite, this.spikesGroup, this.collideDeath, undefined, this);
         this.physics.add.overlap(this.player.sprite, this.deadlyLayer);
         this.deadlyLayer.setTileIndexCallback([17, 18], this.collideDeathTile, this);
+
+        if (this.gameData.onLadder) {
+            var ladder = this.player.getLadder();
+            if (ladder) {
+                this.player.setOnLadder(ladder);
+            } else {
+                console.log("No ladder found at transition location");
+            }
+        }
     }
 
     private createMap(): void {
         this.map = this.add.tilemap(AssetNames.level + this.gameData.level.toString());
+        this.physics.world.setBounds(MapX, MapY, this.map.widthInPixels, this.map.heightInPixels);
         var platformTiles = this.map.addTilesetImage(LocalAssets.tiles, AssetNames.tiles);
         this.platformLayer = this.map.createStaticLayer(LayerNames.platforms, platformTiles, MapX, MapY);
         this.platformLayer.setCollision([1,2,3,4,9,10]);
@@ -243,21 +253,23 @@ export class MainScene extends Phaser.Scene {
         if (body.gameObject.name === 'player') {
             if (up) {
                 --this.gameData.level
-                this.gameData.playerX = this.player.sprite.x;
-                this.gameData.playerY = this.map.heightInPixels - this.player.sprite.width + MapY;
+                this.gameData.startX = this.player.sprite.x;
+                this.gameData.startY = this.map.heightInPixels - this.player.sprite.height + MapY - 1;
             } else if (down) {
                 ++this.gameData.level;
-                this.gameData.playerX = this.player.sprite.x;
-                this.gameData.playerY = MapY;
+                this.gameData.startX = this.player.sprite.x;
+                this.gameData.startY = MapY + 1;
             } else if (left) {
                 this.gameData.level -= 10;
-                this.gameData.playerX = this.map.widthInPixels - this.player.sprite.width + MapX;
-                this.gameData.playerY = this.player.sprite.y;
+                this.gameData.startX = this.map.widthInPixels - this.player.sprite.width + MapX - 1;
+                this.gameData.startY = this.player.sprite.y;
             } else if (right) {
                 this.gameData.level += 10;
-                this.gameData.playerX = MapX;
-                this.gameData.playerY = this.player.sprite.y;
+                this.gameData.startX = MapX + 1;
+                this.gameData.startY = this.player.sprite.y;
             }
+
+            this.gameData.onLadder = this.player.onLadder;
 
             this.transition();
         }
