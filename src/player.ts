@@ -28,6 +28,8 @@ export class Player {
     private ladderTop = 0;
     private ladderBottom = 0;
     private jumpCount = 0;
+    private score = 0;
+    private lives = 5;
 
     constructor(scene: Phaser.Scene, x: number, y: number, key: string,
                 platforms: Phaser.Tilemaps.StaticTilemapLayer,

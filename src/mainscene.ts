@@ -29,9 +29,21 @@ const Animations = {
 const MapX = 0;
 const MapY = 8;
 
+const RoomNames = new Map<number, string>([
+    [11, "The Entrance"],
+    [21, "The Cold Room"],
+    [22, "The Basement"],
+    [31, "The Final Challenge"]
+]);
+
 export class MainScene extends Phaser.Scene {
     private gameData!: GameData;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+
+    private roomNameText!: Phaser.GameObjects.BitmapText;
+    private scoreText!: Phaser.GameObjects.BitmapText;
+    private livesText!: Phaser.GameObjects.BitmapText;
+
     private map!: Phaser.Tilemaps.Tilemap;
     private platformLayer!: Phaser.Tilemaps.StaticTilemapLayer;
     private deadlyLayer!: Phaser.Tilemaps.DynamicTilemapLayer;
@@ -47,6 +59,8 @@ export class MainScene extends Phaser.Scene {
     private spiders: Spider[] = [];
 
     private player!: Player;
+    private score = 0;
+    private lives = 5;
 
     constructor() {
         super(SceneNames.main);
@@ -57,6 +71,26 @@ export class MainScene extends Phaser.Scene {
     }
 
     create(): void {
+        var fontConfig: Phaser.Types.GameObjects.BitmapText.RetroFontConfig = {
+            image: AssetNames.font,
+            width: 8,
+            height: 8,
+            chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,?!:/[]() ',
+            "offset.x": 0,
+            "offset.y": 0,
+            "spacing.x": 0,
+            "spacing.y": 0,
+            lineSpacing: 0,
+            charsPerRow: 72
+        };
+
+        this.cache.bitmapFont.add(AssetNames.font, Phaser.GameObjects.RetroFont.Parse(this, fontConfig));
+        this.add.bitmapText(0, 0, AssetNames.font, "Score:");
+        this.add.bitmapText(192, 0, AssetNames.font, "Lives:");
+        this.roomNameText = this.add.bitmapText(0, 184, AssetNames.font, "Loading");
+        this.scoreText = this.add.bitmapText(56, 0, AssetNames.font, this.score.toString());
+        this.livesText = this.add.bitmapText(248, 0, AssetNames.font, this.lives.toString());
+
         this.cursors = this.input.keyboard.createCursorKeys();
 
         this.createGroups();
@@ -106,6 +140,10 @@ export class MainScene extends Phaser.Scene {
                 console.log("No ladder found at transition location");
             }
         }
+
+        var roomName = RoomNames.get(this.gameData.level) ?? "Error";
+        this.roomNameText.setX(128 - roomName.length*4);
+        this.roomNameText.setText(roomName)
     }
 
     private createMap(): void {
@@ -223,6 +261,7 @@ export class MainScene extends Phaser.Scene {
         if (!this.player.dead) {
             (gem as Phaser.Physics.Arcade.Sprite).disableBody(true, true);
             this.gameData.remainingGems.get(this.gameData.level)!.delete(gem.getData('index') as number);
+            this.addScore(20);
         }
     }
 
@@ -236,15 +275,24 @@ export class MainScene extends Phaser.Scene {
                 door.disableBody(true, true);
             }
             this.gameData.openDoors.add(parseInt(doorId.slice(-1)));
+            this.addScore(50);
         }
     }
 
     private collideDeath(_player: Phaser.GameObjects.GameObject, _enemy: Phaser.GameObjects.GameObject): void {
-        this.player.die(this.onDied, this);
+        this.die();
     }
 
     private collideDeathTile(_player: Phaser.GameObjects.GameObject, _tile: Phaser.Tilemaps.Tile): void {
-        this.player.die(this.onDied, this);
+        this.die();
+    }
+
+    private die() : void {
+        if (!this.player.dead) {
+            this.player.die(this.onDied, this);
+            --this.lives;
+            this.livesText.setText(this.lives.toString());
+        }
     }
 
     private onDied(): void {
@@ -278,5 +326,10 @@ export class MainScene extends Phaser.Scene {
                 this.transition();
             }
         }
+    }
+
+    private addScore(points: number): void {
+        this.score += points;
+        this.scoreText.setText(this.score.toString());
     }
 };

@@ -11,6 +11,7 @@ export class LoadScene extends Phaser.Scene {
         Levels.forEach(level => {
             this.load.tilemapTiledJSON(level[0], level[1]);
         });
+        this.load.image(AssetNames.font, require('./assets/font.png'));
     }
 
     create(): void {

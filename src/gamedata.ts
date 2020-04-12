@@ -13,7 +13,8 @@ export const SceneNames = {
 
 export const AssetNames = {
     level: 'level',
-    tiles: 'tiles'
+    tiles: 'tiles',
+    font: 'font'
 };
 
 export const Levels = [
