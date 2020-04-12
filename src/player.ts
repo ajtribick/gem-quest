@@ -39,7 +39,10 @@ export class Player {
         this.cursors = cursors;
 
         this.sprite = scene.physics.add.sprite(x!, y!, key, 'playerR1').setName('player').setOrigin(0, 0).setCollideWorldBounds(true);
-        (this.sprite.body as Phaser.Physics.Arcade.Body).onWorldBounds = true;
+        var body = this.sprite.body as Phaser.Physics.Arcade.Body;
+        body.onWorldBounds = true;
+        body.setSize(8, 15);
+        body.setOffset(0, 1);
         platforms.setTileIndexCallback([1, 2, 3, 4], () => { this.hasFriction = true; }, this);
         this.platformsCollider = scene.physics.add.collider(this.sprite, platforms);
     }
@@ -142,7 +145,10 @@ export class Player {
             this.sprite.setX(this.ladderLeft);
             var leftDown = this.cursors.left?.isDown;
             var rightDown = this.cursors.right?.isDown;
-            var bounds = new Phaser.Geom.Rectangle(this.sprite.x + (leftDown ? -1 : 0) + (rightDown ? 1 : 0), this.sprite.y, this.sprite.width, this.sprite.height);
+            var bounds = new Phaser.Geom.Rectangle(this.sprite.body.left + (leftDown ? -1 : 0) + (rightDown ? 1 : 0),
+                                                   this.sprite.body.top,
+                                                   this.sprite.body.width,
+                                                   this.sprite.body.height);
             if ((leftDown || rightDown) &&
                     this.platforms.getTilesWithinShape(bounds, { isColliding: true, isNotEmpty: true }).length === 0) {
                 this.clearOnLadder();

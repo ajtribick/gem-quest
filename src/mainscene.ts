@@ -232,7 +232,9 @@ export class MainScene extends Phaser.Scene {
             sprite.disableBody(true, true);
             var doorId = sprite.getData("unlocks") as string;
             var door = this.children.getByName(doorId) as Phaser.Physics.Arcade.Sprite;
-            door.disableBody(true, true);
+            if (door) {
+                door.disableBody(true, true);
+            }
             this.gameData.openDoors.add(parseInt(doorId.slice(-1)));
         }
     }
@@ -269,9 +271,12 @@ export class MainScene extends Phaser.Scene {
                 this.gameData.startY = this.player.sprite.y;
             }
 
-            this.gameData.onLadder = this.player.onLadder;
-
-            this.transition();
+            if (this.gameData.level >= 40) {
+                console.log("Congratulations!");
+            } else {
+                this.gameData.onLadder = this.player.onLadder;
+                this.transition();
+            }
         }
     }
 };
