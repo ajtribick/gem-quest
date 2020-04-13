@@ -47,3 +47,13 @@ export function createStartData(): GameData {
         remainingGems: new Map<number, Set<number>>()
     };
 }
+
+export const FlashColors = [
+    0xff0000,
+    0x00ff00,
+    0xffff00,
+    0x0000ff,
+    0xff00ff,
+    0x00ffff,
+    0xffffff
+];

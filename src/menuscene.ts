@@ -1,15 +1,5 @@
 import 'phaser';
-import {AssetNames, SceneNames, GameData, createStartData} from './gamedata';
-
-const Colors = [
-    0xff0000,
-    0x00ff00,
-    0xffff00,
-    0x0000ff,
-    0xff00ff,
-    0x00ffff,
-    0xffffff
-];
+import {AssetNames, SceneNames, GameData, createStartData, FlashColors} from './gamedata';
 
 export class MenuScene extends Phaser.Scene {
     private title!: Phaser.GameObjects.BitmapText;
@@ -38,10 +28,10 @@ export class MenuScene extends Phaser.Scene {
 
     private changeColor(): void {
         ++this.color;
-        if (this.color >= Colors.length) {
+        if (this.color >= FlashColors.length) {
             this.color = 0;
         }
 
-        this.title.setTint(Colors[this.color]);
+        this.title.setTint(FlashColors[this.color]);
     }
 }
