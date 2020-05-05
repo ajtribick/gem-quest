@@ -5,15 +5,24 @@ html {
     font-size: 0.9em;
 }
 
-#game-host, #main {
+#game-host, #main, #about {
     margin-left: auto;
     margin-right: auto;
+}
+
+#game-host, #main {
     text-align: center;
 }
 
 #game-host {
     padding: 4px;
     background-color: black;
+}
+
+#about {
+    width: 66%;
+    min-width: 800px;
+    margin-top: 4em;
 }
 
 a:link {
