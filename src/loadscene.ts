@@ -1,5 +1,8 @@
 import 'phaser';
-import {SceneNames, AssetNames, Levels, GameData} from './gamedata';
+import {SceneNames, AssetNames, Levels} from './gamedata';
+import images from './assets/*.png';
+import sounds from './assets/*.mp3';
+import jsons from './assets/*.json';
 
 export class LoadScene extends Phaser.Scene {
     constructor() {
@@ -7,22 +10,22 @@ export class LoadScene extends Phaser.Scene {
     }
 
     preload(): void {
-        this.load.atlas(AssetNames.tiles, require('./assets/tiles.png'), require('./assets/atlas.json'));
+        this.load.atlas(AssetNames.tiles, images.tiles, jsons.atlas);
         Levels.forEach(level => {
             this.load.tilemapTiledJSON(level[0], level[1]);
         });
-        this.load.image(AssetNames.font, require('./assets/font.png'));
+        this.load.image(AssetNames.font, images.font);
 
-        this.load.audio(AssetNames.gemSound, require('./assets/gem.mp3'));
-        this.load.audio(AssetNames.keySound, require('./assets/key.mp3'));
-        this.load.audio(AssetNames.dieSound, require('./assets/die.mp3'));
-        this.load.audio(AssetNames.jumpSound, require('./assets/jump.mp3'));
-        this.load.audio(AssetNames.landSound, require('./assets/land.mp3'));
-        this.load.audio(AssetNames.winSound, require('./assets/win.mp3'));
+        this.load.audio(AssetNames.gemSound, sounds.gem);
+        this.load.audio(AssetNames.keySound, sounds.key);
+        this.load.audio(AssetNames.dieSound, sounds.die);
+        this.load.audio(AssetNames.jumpSound, sounds.jump);
+        this.load.audio(AssetNames.landSound, sounds.land);
+        this.load.audio(AssetNames.winSound, sounds.win);
     }
 
     create(): void {
-        var fontConfig: Phaser.Types.GameObjects.BitmapText.RetroFontConfig = {
+        const fontConfig: Phaser.Types.GameObjects.BitmapText.RetroFontConfig = {
             image: AssetNames.font,
             width: 8,
             height: 8,
@@ -38,4 +41,4 @@ export class LoadScene extends Phaser.Scene {
 
         this.scene.start(SceneNames.menu);
     }
-};
+}

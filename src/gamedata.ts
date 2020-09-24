@@ -1,3 +1,5 @@
+import jsons from './assets/*.json';
+
 export interface GameData {
     startX: number;
     startY: number;
@@ -31,10 +33,10 @@ export const AssetNames = {
 };
 
 export const Levels = [
-    ['level11', require('./assets/map11.json')],
-    ['level21', require('./assets/map21.json')],
-    ['level22', require('./assets/map22.json')],
-    ['level31', require('./assets/map31.json')]
+    ['level11', jsons.map11],
+    ['level21', jsons.map21],
+    ['level22', jsons.map22],
+    ['level31', jsons.map31]
 ];
 
 export function createStartData(): GameData {

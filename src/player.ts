@@ -40,11 +40,11 @@ export class Player {
         this.ladders = ladders;
         this.cursors = cursors;
 
-        this.sprite = scene.physics.add.sprite(x!, y!, key, 'playerR1').setName('player').setOrigin(0, 0).setCollideWorldBounds(true);
-        var body = this.sprite.body as Phaser.Physics.Arcade.Body;
+        this.sprite = scene.physics.add.sprite(x, y, key, 'playerR1').setName('player').setOrigin(0, 0).setCollideWorldBounds(true);
+        const body = (this.sprite.body as Phaser.Physics.Arcade.Body)
+            .setSize(8, 15)
+            .setOffset(0, 1);
         body.onWorldBounds = true;
-        body.setSize(8, 15);
-        body.setOffset(0, 1);
         platforms.setTileIndexCallback([1, 2, 3, 4], () => { this.hasFriction = true; }, this);
         this.platformsCollider = scene.physics.add.collider(this.sprite, platforms);
     }
@@ -82,11 +82,11 @@ export class Player {
     update(): void {
         if (this.dead) { return; }
 
-        var playerBody = this.sprite.body as Phaser.Physics.Arcade.Body;
+        const playerBody = this.sprite.body as Phaser.Physics.Arcade.Body;
 
-        var hasFriction = this.hasFriction;
+        const hasFriction = this.hasFriction;
         this.hasFriction = false;
-        var onFloor = playerBody.onFloor();
+        const onFloor = playerBody.onFloor();
         if (onFloor) {
             if (!this.wasOnFloor && this.jumpCount < 8) {
                 this.scene.sound.play(AssetNames.landSound);
@@ -98,11 +98,11 @@ export class Player {
 
         this.wasOnFloor = onFloor;
 
-        var leftDown = this.cursors.left?.isDown;
-        var rightDown = this.cursors.right?.isDown;
+        const leftDown = this.cursors.left?.isDown;
+        const rightDown = this.cursors.right?.isDown;
 
         if (!this.onLadder) {
-            var vx: number;
+            let vx: number;
             if (hasFriction) {
                 vx = 0;
                 if (leftDown) {
@@ -136,7 +136,7 @@ export class Player {
 
             playerBody.setVelocityX(vx);
 
-            var ladder = this.getLadder();
+            const ladder = this.getLadder();
 
             if (this.cursors.up?.isDown) {
                 if (ladder && !(leftDown || rightDown)) {
@@ -152,14 +152,12 @@ export class Player {
                 this.setOnLadder(ladder);
             }
         } else {
-            var vy = 0;
+            let vy = 0;
             this.sprite.setX(this.ladderLeft);
-            var leftDown = this.cursors.left?.isDown;
-            var rightDown = this.cursors.right?.isDown;
-            var bounds = new Phaser.Geom.Rectangle(this.sprite.body.left + (leftDown ? -1 : 0) + (rightDown ? 1 : 0),
-                                                   this.sprite.body.top,
-                                                   this.sprite.body.width,
-                                                   this.sprite.body.height);
+            const bounds = new Phaser.Geom.Rectangle(this.sprite.body.left + (leftDown ? -1 : 0) + (rightDown ? 1 : 0),
+                                                     this.sprite.body.top,
+                                                     this.sprite.body.width,
+                                                     this.sprite.body.height);
             if ((leftDown || rightDown) &&
                     this.platforms.getTilesWithinShape(bounds, { isColliding: true, isNotEmpty: true }).length === 0) {
                 this.clearOnLadder();
@@ -187,7 +185,7 @@ export class Player {
     }
 
     public getLadder(): Phaser.Physics.Arcade.Sprite | null {
-        var ladder: Phaser.Physics.Arcade.Sprite | null = null;
+        let ladder: Phaser.Physics.Arcade.Sprite | null = null;
         this.scene.physics.overlap(this.sprite, this.ladders, (_p, l) => { ladder = l as Phaser.Physics.Arcade.Sprite; }, undefined, this);
         return ladder;
     }
@@ -211,14 +209,14 @@ export class Player {
         this.platformsCollider.active = true;
     }
 
-    die(diedCallback: Function, context: any): void {
+    die(diedCallback: () => void): void {
         if (!this.dead) {
             this.dead = true;
             this.clearOnLadder();
             this.sprite.anims.stop();
             this.sprite.on('animationcomplete', () => {
                 this.scene.time.delayedCall(500, () => {
-                    diedCallback.bind(context)();
+                    diedCallback();
                 })
             }, this);
 

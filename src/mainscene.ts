@@ -70,8 +70,8 @@ export class MainScene extends Phaser.Scene {
         super(SceneNames.main);
     }
 
-    init(data: any): void {
-        this.gameData = data as GameData;
+    init(data: GameData): void {
+        this.gameData = data;
     }
 
     create(): void {
@@ -127,13 +127,13 @@ export class MainScene extends Phaser.Scene {
         this.physics.add.collider(this.player.sprite, this.doorsGroup);
         this.physics.add.overlap(this.player.sprite, this.gemsGroup, this.collectGem, undefined, this);
         this.physics.add.overlap(this.player.sprite, this.keysGroup, this.collectKey, undefined, this);
-        this.physics.add.overlap(this.player.sprite, this.spidersGroup, this.collideDeath, undefined, this);
-        this.physics.add.overlap(this.player.sprite, this.spikesGroup, this.collideDeath, undefined, this);
+        this.physics.add.overlap(this.player.sprite, this.spidersGroup, this.die.bind(this), undefined, this);
+        this.physics.add.overlap(this.player.sprite, this.spikesGroup, this.die.bind(this), undefined, this);
         this.physics.add.overlap(this.player.sprite, this.deadlyLayer);
-        this.deadlyLayer.setTileIndexCallback([17, 18], this.collideDeathTile, this);
+        this.deadlyLayer.setTileIndexCallback([17, 18], this.die.bind(this), this);
 
         if (this.gameData.onLadder) {
-            var ladder = this.player.getLadder();
+            const ladder = this.player.getLadder();
             if (ladder) {
                 this.player.setOnLadder(ladder);
             } else {
@@ -141,7 +141,7 @@ export class MainScene extends Phaser.Scene {
             }
         }
 
-        var roomName = RoomNames.get(this.gameData.level) ?? "Error";
+        const roomName = RoomNames.get(this.gameData.level) ?? "Error";
         this.roomNameText.setX(128 - roomName.length*4);
         this.roomNameText.setText(roomName);
         this.livesText.setText(this.lives.toString());
@@ -150,22 +150,22 @@ export class MainScene extends Phaser.Scene {
     private createMap(): void {
         this.map = this.add.tilemap(AssetNames.level + this.gameData.level.toString());
         this.physics.world.setBounds(MapX, MapY, this.map.widthInPixels, this.map.heightInPixels);
-        var platformTiles = this.map.addTilesetImage(LocalAssets.tiles, AssetNames.tiles);
+        const platformTiles = this.map.addTilesetImage(LocalAssets.tiles, AssetNames.tiles);
         this.platformLayer = this.map.createStaticLayer(LayerNames.platforms, platformTiles, MapX, MapY);
         this.platformLayer.setCollision([1,2,3,4,9,10]);
 
-        var ladderLayer = this.map.createStaticLayer(LayerNames.ladders, platformTiles, MapX, MapY);
+        const ladderLayer = this.map.createStaticLayer(LayerNames.ladders, platformTiles, MapX, MapY);
 
         ladderLayer.forEachTile((tile : Phaser.Tilemaps.Tile) => {
             if (tile.index === 12 && (tile.y === 0 || ladderLayer.getTileAt(tile.x, tile.y - 1, true).index !== 12)) {
-                var bottomTile = tile;
+                let bottomTile = tile;
                 while (bottomTile.y < this.map.height - 1) {
-                    var nextTile = ladderLayer.getTileAt(bottomTile.x, bottomTile.y + 1, true);
+                    const nextTile = ladderLayer.getTileAt(bottomTile.x, bottomTile.y + 1, true);
                     if (nextTile.index != 12) { break; }
                     bottomTile = nextTile;
                 }
 
-                var ladder = this.laddersGroup.create(tile.getLeft() + 4, (tile.getTop() + bottomTile.getBottom()) / 2, undefined) as Phaser.Physics.Arcade.Sprite;
+                const ladder = this.laddersGroup.create(tile.getLeft() + 4, (tile.getTop() + bottomTile.getBottom()) / 2, undefined) as Phaser.Physics.Arcade.Sprite;
                 ladder.setVisible(false);
                 ladder.body.setSize(2, bottomTile.getBottom() - tile.getTop());
             }
@@ -174,7 +174,7 @@ export class MainScene extends Phaser.Scene {
         this.deadlyLayer = this.map.createDynamicLayer(LayerNames.deadly, platformTiles, MapX, MapY);
         this.deadlyLayer.forEachTile(tile => {
             if (tile.index === 20) {
-                var spikes = this.spikesGroup.create(tile.pixelX + MapX, tile.pixelY + MapY + 4, AssetNames.tiles, "spikes") as Phaser.Physics.Arcade.Sprite;
+                const spikes = this.spikesGroup.create(tile.pixelX + MapX, tile.pixelY + MapY + 4, AssetNames.tiles, "spikes") as Phaser.Physics.Arcade.Sprite;
                 spikes.setOrigin(0, 0);
                 spikes.body.setSize(6, 4, true);
                 tile.index = 0;
@@ -182,43 +182,50 @@ export class MainScene extends Phaser.Scene {
         });
     }
 
-    private createObjects(): void {
-        var objsLayer = this.map.getObjectLayer(LayerNames.objects);
-        var generateGems = false;
-        var gemsSet = this.gameData.remainingGems.get(this.gameData.level);
-        if (!gemsSet) {
-            gemsSet = new Set<number>();
-            this.gameData.remainingGems.set(this.gameData.level, gemsSet);
-            generateGems = true;
+    private getOrCreateRemainingGems(): [Set<number>, boolean] {
+        let gemsSet = this.gameData.remainingGems.get(this.gameData.level);
+        if (gemsSet) {
+            return [gemsSet, false];
         }
 
-        var gemIndex = 0;
+        gemsSet = new Set<number>();
+        this.gameData.remainingGems.set(this.gameData.level, gemsSet);
+        return [gemsSet, true];
+    }
+
+    private createObjects(): void {
+        const objsLayer = this.map.getObjectLayer(LayerNames.objects);
+        const [gemsSet, generateGems] = this.getOrCreateRemainingGems();
+
+        let gemIndex = 0;
 
         objsLayer.objects.forEach((obj) => {
             switch (obj.type) {
                 case ObjTypes.gem:
                     if (generateGems) {
-                        gemsSet!.add(gemIndex++);
-                    } else if (!gemsSet!.has(gemIndex++)) {
+                        gemsSet.add(gemIndex++);
+                    } else if (!gemsSet.has(gemIndex++)) {
                         break;
                     }
 
-                    var gem = (this.gemsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, 'gem1') as Phaser.Physics.Arcade.Sprite).setOrigin(0, 1);
-                    gem.setData("index", gemIndex - 1);
-                    gem.body.setSize(7, 7, false);
-                    gem.anims.play(Animations.gem);
-                    this.gemsGroup.add(gem);
+                    (this.gemsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, 'gem1') as Phaser.Physics.Arcade.Sprite)
+                        .setOrigin(0, 1)
+                        .setData("index", gemIndex - 1)
+                        .setBodySize(7, 7, false)
+                        .play(Animations.gem);
                     break;
                 case ObjTypes.key:
                     if (!this.gameData.openDoors.has(parseInt(obj.name.slice(-1)))) {
-                        var key = (this.keysGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite).setOrigin(0, 1);
-                        key.setData("unlocks", "door" + obj.name.slice(-1));
+                        (this.keysGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite)
+                            .setOrigin(0, 1)
+                            .setData("unlocks", "door" + obj.name.slice(-1));
                     }
                     break;
                 case ObjTypes.door:
                     if (!this.gameData.openDoors.has(parseInt(obj.name.slice(-1)))) {
-                        var door = (this.doorsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite).setOrigin(0, 0);
-                        door.name = obj.name;
+                        (this.doorsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite)
+                            .setOrigin(0, 0)
+                            .setName(obj.name);
                     }
                     break;
                 case ObjTypes.spider:
@@ -226,9 +233,10 @@ export class MainScene extends Phaser.Scene {
                     break;
                 case ObjTypes.magicDoor:
                     if (!this.hasAllGems()) {
-                        var door = (this.doorsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, "door1") as Phaser.Physics.Arcade.Sprite).setOrigin(0, 0);
-                        door.name = obj.name;
-                        door.anims.play(Animations.magicDoor);
+                        (this.doorsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, "door1") as Phaser.Physics.Arcade.Sprite)
+                            .setOrigin(0, 0)
+                            .setName(obj.name)
+                            .play(Animations.magicDoor);
                     }
                     break;
             }
@@ -269,7 +277,7 @@ export class MainScene extends Phaser.Scene {
         if (!this.player.dead) {
             this.gameData.remainingGems.get(this.gameData.level)!.delete(gem.getData('index') as number);
             if (this.hasAllGems()) {
-                var door = this.children.getByName('magicdoor') as (Phaser.Physics.Arcade.Sprite | null);
+                const door = this.children.getByName('magicdoor') as (Phaser.Physics.Arcade.Sprite | null);
                 if (door) {
                     door.destroy();
                 }
@@ -282,9 +290,9 @@ export class MainScene extends Phaser.Scene {
 
     private collectKey(_player: Phaser.GameObjects.GameObject, key: Phaser.GameObjects.GameObject): void {
         if (!this.player.dead) {
-            var sprite = key as Phaser.Physics.Arcade.Sprite;
-            var doorId = sprite.getData("unlocks") as string;
-            var door = this.children.getByName(doorId) as (Phaser.Physics.Arcade.Sprite | null);
+            const sprite = key as Phaser.Physics.Arcade.Sprite;
+            const doorId = sprite.getData("unlocks") as string;
+            const door = this.children.getByName(doorId) as (Phaser.Physics.Arcade.Sprite | null);
             if (door) {
                 door.destroy();
             }
@@ -295,17 +303,9 @@ export class MainScene extends Phaser.Scene {
         }
     }
 
-    private collideDeath(_player: Phaser.GameObjects.GameObject, _enemy: Phaser.GameObjects.GameObject): void {
-        this.die();
-    }
-
-    private collideDeathTile(_player: Phaser.GameObjects.GameObject, _tile: Phaser.Tilemaps.Tile): void {
-        this.die();
-    }
-
     private die() : void {
         if (!this.player.dead) {
-            this.player.die(this.onDied, this);
+            this.player.die(this.onDied.bind(this));
             --this.lives;
             this.sound.play(AssetNames.dieSound);
         }
@@ -356,11 +356,11 @@ export class MainScene extends Phaser.Scene {
     private hasAllGems(): boolean {
         if (this.gameData.remainingGems.size !== 4) { return false; }
 
-        var valuesIterator = this.gameData.remainingGems.values();
+        const valuesIterator = this.gameData.remainingGems.values();
         for (;;) {
-            var result = valuesIterator.next();
+            const result = valuesIterator.next();
             if (result.done) { return true; }
             if (result.value.size > 0) { return false; }
         }
     }
-};
+}

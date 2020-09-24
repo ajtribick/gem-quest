@@ -14,7 +14,7 @@ export class Spider {
         this.spider = group.create(obj.x! + mapX, obj.y! + mapY, key, 'spider1').setOrigin(0.5, 0.5);
 
         this.path = new Phaser.Curves.Path();
-        var yoyo = false;
+        let yoyo = false;
         if (obj.polygon) {
             obj.polygon.forEach((coords, index) => {
                 if (index === 0) {
@@ -58,7 +58,7 @@ export class Spider {
     }
 
     update(): void {
-        var t = this.spider.z;
+        const t = this.spider.z;
         this.path.getPoint(t, this.vector);
         this.spider.setPosition(this.vector.x, this.vector.y);
     }
