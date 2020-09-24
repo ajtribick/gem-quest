@@ -11,28 +11,23 @@ export class Spider {
                 obj: Phaser.Types.Tilemaps.TiledObject,
                 group: Phaser.Physics.Arcade.Group,
                 mapX: number, mapY: number, key: string) {
-        this.spider = group.create(obj.x! + mapX, obj.y! + mapY, key, 'spider1').setOrigin(0.5, 0.5);
+        const objX = obj.x ?? 0;
+        const objY = obj.y ?? 0;
+        this.spider = group.create(objX + mapX, objY + mapY, key, 'spider1').setOrigin(0.5, 0.5);
 
         this.path = new Phaser.Curves.Path();
         let yoyo = false;
-        if (obj.polygon) {
-            obj.polygon.forEach((coords, index) => {
-                if (index === 0) {
-                    this.path.moveTo(coords.x! + obj.x! + mapX, coords.y! + obj.y! + mapY);
-                } else {
-                    this.path.lineTo(coords.x! + obj.x! + mapX, coords.y! + obj.y! + mapY);
-                }
-            });
-        } else if (obj.polyline) {
-            obj.polyline.forEach((coords, index) => {
-                if (index === 0) {
-                    this.path.moveTo(coords.x! + obj.x! + mapX, coords.y! + obj.y! + mapY);
-                } else {
-                    this.path.lineTo(coords.x! + obj.x! + mapX, coords.y! + obj.y! + mapY);
-                }
-            });
-            yoyo = true;
-        }
+        (obj.polygon ?? obj.polyline)?.forEach((coords, index) => {
+            const coordsX = coords.x ?? 0;
+            const coordsY = coords.y ?? 0;
+            if (index === 0) {
+                this.path.moveTo(coordsX + objX + mapX, coordsY + objY + mapY);
+            } else {
+                this.path.lineTo(coordsX + objX + mapX, coordsY + objY + mapY);
+            }
+        });
+
+        if (obj.polyline) { yoyo = true; }
 
         this.vector = new Phaser.Math.Vector2();
         this.spider.anims.play(Animation);

@@ -5,7 +5,6 @@ import {MainScene} from './mainscene';
 import {GameOverScene} from './gameoverscene';
 import {WinScene} from './winscene';
 
-
 const config: Phaser.Types.Core.GameConfig = {
     scene: [LoadScene, MenuScene, MainScene, GameOverScene, WinScene],
     scale: {

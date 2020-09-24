@@ -200,6 +200,8 @@ export class MainScene extends Phaser.Scene {
         let gemIndex = 0;
 
         objsLayer.objects.forEach((obj) => {
+            const objX = obj.x ?? 0;
+            const objY = obj.y ?? 0;
             switch (obj.type) {
                 case ObjTypes.gem:
                     if (generateGems) {
@@ -208,7 +210,7 @@ export class MainScene extends Phaser.Scene {
                         break;
                     }
 
-                    (this.gemsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, 'gem1') as Phaser.Physics.Arcade.Sprite)
+                    (this.gemsGroup.create(objX + MapX, objY + MapY, LocalAssets.tiles, 'gem1') as Phaser.Physics.Arcade.Sprite)
                         .setOrigin(0, 1)
                         .setData("index", gemIndex - 1)
                         .setBodySize(7, 7, false)
@@ -216,14 +218,14 @@ export class MainScene extends Phaser.Scene {
                     break;
                 case ObjTypes.key:
                     if (!this.gameData.openDoors.has(parseInt(obj.name.slice(-1)))) {
-                        (this.keysGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite)
+                        (this.keysGroup.create(objX + MapX, objY + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite)
                             .setOrigin(0, 1)
                             .setData("unlocks", "door" + obj.name.slice(-1));
                     }
                     break;
                 case ObjTypes.door:
                     if (!this.gameData.openDoors.has(parseInt(obj.name.slice(-1)))) {
-                        (this.doorsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite)
+                        (this.doorsGroup.create(objX + MapX, objY + MapY, LocalAssets.tiles, obj.name) as Phaser.Physics.Arcade.Sprite)
                             .setOrigin(0, 0)
                             .setName(obj.name);
                     }
@@ -233,7 +235,7 @@ export class MainScene extends Phaser.Scene {
                     break;
                 case ObjTypes.magicDoor:
                     if (!this.hasAllGems()) {
-                        (this.doorsGroup.create(obj.x! + MapX, obj.y! + MapY, LocalAssets.tiles, "door1") as Phaser.Physics.Arcade.Sprite)
+                        (this.doorsGroup.create(objX + MapX, objY + MapY, LocalAssets.tiles, "door1") as Phaser.Physics.Arcade.Sprite)
                             .setOrigin(0, 0)
                             .setName(obj.name)
                             .play(Animations.magicDoor);
@@ -275,7 +277,7 @@ export class MainScene extends Phaser.Scene {
 
     private collectGem(_player: Phaser.GameObjects.GameObject, gem: Phaser.GameObjects.GameObject): void {
         if (!this.player.dead) {
-            this.gameData.remainingGems.get(this.gameData.level)!.delete(gem.getData('index') as number);
+            this.gameData.remainingGems.get(this.gameData.level)?.delete(gem.getData('index') as number);
             if (this.hasAllGems()) {
                 const door = this.children.getByName('magicdoor') as (Phaser.Physics.Arcade.Sprite | null);
                 if (door) {
