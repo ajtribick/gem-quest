@@ -1,5 +1,7 @@
 # Gem Quest
 
+![Screenshot of the first room](/preview.png)
+
 This game is the result of a long weekend spent learning
 [TypeScript](https://www.typescriptlang.org) and the
 [Phaser game](https://phaser.io) framework, with the objective of getting a
