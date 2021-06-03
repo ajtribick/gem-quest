@@ -49,8 +49,8 @@ export class MainScene extends Phaser.Scene {
     private livesText!: Phaser.GameObjects.BitmapText;
 
     private map!: Phaser.Tilemaps.Tilemap;
-    private platformLayer!: Phaser.Tilemaps.StaticTilemapLayer;
-    private deadlyLayer!: Phaser.Tilemaps.DynamicTilemapLayer;
+    private platformLayer!: Phaser.Tilemaps.TilemapLayer;
+    private deadlyLayer!: Phaser.Tilemaps.TilemapLayer;
     private waterFrames: integer = 10;
 
     private gemsGroup!: Phaser.Physics.Arcade.Group;
@@ -151,10 +151,10 @@ export class MainScene extends Phaser.Scene {
         this.map = this.add.tilemap(AssetNames.level + this.gameData.level.toString());
         this.physics.world.setBounds(MapX, MapY, this.map.widthInPixels, this.map.heightInPixels);
         const platformTiles = this.map.addTilesetImage(LocalAssets.tiles, AssetNames.tiles);
-        this.platformLayer = this.map.createStaticLayer(LayerNames.platforms, platformTiles, MapX, MapY);
+        this.platformLayer = this.map.createLayer(LayerNames.platforms, platformTiles, MapX, MapY);
         this.platformLayer.setCollision([1,2,3,4,9,10]);
 
-        const ladderLayer = this.map.createStaticLayer(LayerNames.ladders, platformTiles, MapX, MapY);
+        const ladderLayer = this.map.createLayer(LayerNames.ladders, platformTiles, MapX, MapY);
 
         ladderLayer.forEachTile((tile : Phaser.Tilemaps.Tile) => {
             if (tile.index === 12 && (tile.y === 0 || ladderLayer.getTileAt(tile.x, tile.y - 1, true).index !== 12)) {
@@ -171,7 +171,7 @@ export class MainScene extends Phaser.Scene {
             }
         });
 
-        this.deadlyLayer = this.map.createDynamicLayer(LayerNames.deadly, platformTiles, MapX, MapY);
+        this.deadlyLayer = this.map.createLayer(LayerNames.deadly, platformTiles, MapX, MapY);
         this.deadlyLayer.forEachTile(tile => {
             if (tile.index === 20) {
                 const spikes = this.spikesGroup.create(tile.pixelX + MapX, tile.pixelY + MapY + 4, AssetNames.tiles, "spikes") as Phaser.Physics.Arcade.Sprite;

@@ -1,4 +1,9 @@
-import jsons from './assets/*.json';
+const jsons = {
+    map11: require('url:./assets/map11.json'),
+    map21: require('url:./assets/map21.json'),
+    map22: require('url:./assets/map22.json'),
+    map31: require('url:./assets/map31.json')
+};
 
 export interface GameData {
     startX: number;

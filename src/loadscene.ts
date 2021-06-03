@@ -1,8 +1,23 @@
 import 'phaser';
 import {SceneNames, AssetNames, Levels} from './gamedata';
-import images from './assets/*.png';
-import sounds from './assets/*.mp3';
-import jsons from './assets/*.json';
+
+const images = {
+    font: require('url:./assets/font.png'),
+    tiles: require('url:./assets/tiles.png')
+};
+
+const sounds = {
+    die: require('url:./assets/die.mp3'),
+    gem: require('url:./assets/gem.mp3'),
+    jump: require('url:./assets/jump.mp3'),
+    key: require('url:./assets/key.mp3'),
+    land: require('url:./assets/land.mp3'),
+    win: require('url:./assets/win.mp3')
+};
+
+const jsons = {
+    atlas: require('url:./assets/atlas.json')
+};
 
 export class LoadScene extends Phaser.Scene {
     constructor() {
