@@ -1,5 +1,6 @@
 import 'phaser';
 import {SceneNames, AssetNames, Levels} from './gamedata';
+import atlas from './assets/atlas.json';
 
 const images = {
     font: require('url:./assets/font.png'),
@@ -16,7 +17,7 @@ const sounds = {
 };
 
 const jsons = {
-    atlas: require('url:./assets/atlas.json')
+    atlas: atlas
 };
 
 export class LoadScene extends Phaser.Scene {

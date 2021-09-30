@@ -1,8 +1,13 @@
+import map11 from './assets/map11.json';
+import map21 from './assets/map21.json';
+import map22 from './assets/map22.json';
+import map31 from './assets/map31.json';
+
 const jsons = {
-    map11: require('url:./assets/map11.json'),
-    map21: require('url:./assets/map21.json'),
-    map22: require('url:./assets/map22.json'),
-    map31: require('url:./assets/map31.json')
+    map11: map11,
+    map21: map21,
+    map22: map22,
+    map31: map31
 };
 
 export interface GameData {
