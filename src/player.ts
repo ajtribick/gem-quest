@@ -20,7 +20,7 @@ export class Player {
     dead = false;
 
     private scene: Phaser.Scene;
-    private platforms: Phaser.Tilemaps.StaticTilemapLayer;
+    private platforms: Phaser.Tilemaps.TilemapLayer;
     private ladders: Phaser.Physics.Arcade.StaticGroup;
     private platformsCollider: Phaser.Physics.Arcade.Collider;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -32,7 +32,7 @@ export class Player {
     private wasOnFloor = true;
 
     constructor(scene: Phaser.Scene, x: number, y: number, key: string,
-                platforms: Phaser.Tilemaps.StaticTilemapLayer,
+                platforms: Phaser.Tilemaps.TilemapLayer,
                 ladders: Phaser.Physics.Arcade.StaticGroup,
                 cursors: Phaser.Types.Input.Keyboard.CursorKeys) {
         this.scene = scene;
