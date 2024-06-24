@@ -84,7 +84,8 @@ export class MainScene extends Phaser.Scene {
         this.scoreText = this.add.bitmapText(56, 0, AssetNames.font, this.score.toString());
         this.livesText = this.add.bitmapText(248, 0, AssetNames.font, this.lives.toString());
 
-        this.cursors = this.input.keyboard.createCursorKeys();
+        const keyboard = this.input.keyboard as Phaser.Input.Keyboard.KeyboardPlugin;
+        this.cursors = keyboard.createCursorKeys();
 
         this.createGroups();
         this.createLevel();
@@ -125,8 +126,8 @@ export class MainScene extends Phaser.Scene {
         this.player = new Player(this, this.gameData.startX, this.gameData.startY, AssetNames.tiles, this.platformLayer, this.laddersGroup, this.cursors);
 
         this.physics.add.collider(this.player.sprite, this.doorsGroup);
-        this.physics.add.overlap(this.player.sprite, this.gemsGroup, this.collectGem, undefined, this);
-        this.physics.add.overlap(this.player.sprite, this.keysGroup, this.collectKey, undefined, this);
+        this.physics.add.overlap(this.player.sprite, this.gemsGroup, this.collectGem as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback, undefined, this);
+        this.physics.add.overlap(this.player.sprite, this.keysGroup, this.collectKey as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback, undefined, this);
         this.physics.add.overlap(this.player.sprite, this.spidersGroup, this.die.bind(this), undefined, this);
         this.physics.add.overlap(this.player.sprite, this.spikesGroup, this.die.bind(this), undefined, this);
         this.physics.add.overlap(this.player.sprite, this.deadlyLayer);
@@ -150,11 +151,11 @@ export class MainScene extends Phaser.Scene {
     private createMap(): void {
         this.map = this.add.tilemap(AssetNames.level + this.gameData.level.toString());
         this.physics.world.setBounds(MapX, MapY, this.map.widthInPixels, this.map.heightInPixels);
-        const platformTiles = this.map.addTilesetImage(LocalAssets.tiles, AssetNames.tiles);
-        this.platformLayer = this.map.createLayer(LayerNames.platforms, platformTiles, MapX, MapY);
+        const platformTiles = this.map.addTilesetImage(LocalAssets.tiles, AssetNames.tiles) as Phaser.Tilemaps.Tileset;
+        this.platformLayer = this.map.createLayer(LayerNames.platforms, platformTiles, MapX, MapY) as Phaser.Tilemaps.TilemapLayer;
         this.platformLayer.setCollision([1,2,3,4,9,10]);
 
-        const ladderLayer = this.map.createLayer(LayerNames.ladders, platformTiles, MapX, MapY);
+        const ladderLayer = this.map.createLayer(LayerNames.ladders, platformTiles, MapX, MapY) as Phaser.Tilemaps.TilemapLayer;
 
         ladderLayer.forEachTile((tile : Phaser.Tilemaps.Tile) => {
             if (tile.index === 12 && (tile.y === 0 || ladderLayer.getTileAt(tile.x, tile.y - 1, true).index !== 12)) {
@@ -167,16 +168,18 @@ export class MainScene extends Phaser.Scene {
 
                 const ladder = this.laddersGroup.create(tile.getLeft() + 4, (tile.getTop() + bottomTile.getBottom()) / 2, undefined) as Phaser.Physics.Arcade.Sprite;
                 ladder.setVisible(false);
-                ladder.body.setSize(2, bottomTile.getBottom() - tile.getTop());
+                const ladderBody = ladder.body as Phaser.Physics.Arcade.Body;
+                ladderBody.setSize(2, bottomTile.getBottom() - tile.getTop());
             }
         });
 
-        this.deadlyLayer = this.map.createLayer(LayerNames.deadly, platformTiles, MapX, MapY);
+        this.deadlyLayer = this.map.createLayer(LayerNames.deadly, platformTiles, MapX, MapY) as Phaser.Tilemaps.TilemapLayer;
         this.deadlyLayer.forEachTile(tile => {
             if (tile.index === 20) {
                 const spikes = this.spikesGroup.create(tile.pixelX + MapX, tile.pixelY + MapY + 4, AssetNames.tiles, "spikes") as Phaser.Physics.Arcade.Sprite;
                 spikes.setOrigin(0, 0);
-                spikes.body.setSize(6, 4, true);
+                const spikesBody = spikes.body as Phaser.Physics.Arcade.Body;
+                spikesBody.setSize(6, 4, true);
                 tile.index = 0;
             }
         });
@@ -194,7 +197,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     private createObjects(): void {
-        const objsLayer = this.map.getObjectLayer(LayerNames.objects);
+        const objsLayer = this.map.getObjectLayer(LayerNames.objects) as Phaser.Tilemaps.ObjectLayer;
         const [gemsSet, generateGems] = this.getOrCreateRemainingGems();
 
         let gemIndex = 0;
@@ -275,7 +278,8 @@ export class MainScene extends Phaser.Scene {
         this.spiders.forEach(spider => { spider.update(); });
     }
 
-    private collectGem(_player: Phaser.GameObjects.GameObject, gem: Phaser.GameObjects.GameObject): void {
+    private collectGem(_player: Phaser.Types.Physics.Arcade.GameObjectWithBody,
+                       gem: Phaser.Types.Physics.Arcade.GameObjectWithBody): void {
         if (!this.player.dead) {
             this.gameData.remainingGems.get(this.gameData.level)?.delete(gem.getData('index') as number);
             if (this.hasAllGems()) {
@@ -290,7 +294,8 @@ export class MainScene extends Phaser.Scene {
         }
     }
 
-    private collectKey(_player: Phaser.GameObjects.GameObject, key: Phaser.GameObjects.GameObject): void {
+    private collectKey(_player: Phaser.Types.Physics.Arcade.GameObjectWithBody,
+                       key: Phaser.Types.Physics.Arcade.GameObjectWithBody): void {
         if (!this.player.dead) {
             const sprite = key as Phaser.Physics.Arcade.Sprite;
             const doorId = sprite.getData("unlocks") as string;

@@ -154,23 +154,23 @@ export class Player {
         } else {
             let vy = 0;
             this.sprite.setX(this.ladderLeft);
-            const bounds = new Phaser.Geom.Rectangle(this.sprite.body.left + (leftDown ? -1 : 0) + (rightDown ? 1 : 0),
-                                                     this.sprite.body.top,
-                                                     this.sprite.body.width,
-                                                     this.sprite.body.height);
+            const bounds = new Phaser.Geom.Rectangle(playerBody.left + (leftDown ? -1 : 0) + (rightDown ? 1 : 0),
+                                                     playerBody.top,
+                                                     playerBody.width,
+                                                     playerBody.height);
             if ((leftDown || rightDown) &&
                     this.platforms.getTilesWithinShape(bounds, { isColliding: true, isNotEmpty: true }).length === 0) {
                 this.clearOnLadder();
             } else {
-                if (this.sprite.body.top < this.ladderTop) {
+                if (playerBody.top < this.ladderTop) {
                     this.sprite.setY(this.ladderTop);
-                } else if (this.sprite.body.bottom > this.ladderBottom) {
+                } else if (playerBody.bottom > this.ladderBottom) {
                     this.sprite.setY(this.ladderBottom - this.sprite.height);
                 }
-                if (this.cursors.up?.isDown && this.sprite.body.top > this.ladderTop) {
+                if (this.cursors.up?.isDown && playerBody.top > this.ladderTop) {
                     vy -= WalkSpeed;
                 }
-                if (this.cursors.down?.isDown && this.sprite.body.bottom < this.ladderBottom) {
+                if (this.cursors.down?.isDown && playerBody.bottom < this.ladderBottom) {
                     vy += WalkSpeed;
                 }
                 if (vy !== 0) {
@@ -191,9 +191,10 @@ export class Player {
     }
 
     public setOnLadder(ladder: Phaser.Physics.Arcade.Sprite): void {
+        const ladderBody = ladder.body as Phaser.Physics.Arcade.Body;
         this.onLadder = true;
-        this.ladderTop = ladder.body.top - 8;
-        this.ladderBottom = ladder.body.bottom;
+        this.ladderTop = ladderBody.top - 8;
+        this.ladderBottom = ladderBody.bottom;
         this.ladderLeft = ladder.x - 4;
         this.sprite.setFrame('playerUD1');
         this.sprite.setX(this.ladderLeft);
